@@ -66,7 +66,8 @@ intern s32 _stdcall fill_blocks_from_epilogues_thread_proc(void* thread_informat
 
 		for (s32 j = block_information->block->y + block_information->block->height - 1; j >= block_information->block->y; --j)
 		{
-			s32 d = *(block_information->domain_transforms + j * block_information->image_information->width + i);
+			s32 d_y_position = (j < block_information->image_information->height - 1) ? j + 1 : j;
+			s32 d = *(block_information->domain_transforms + d_y_position * block_information->image_information->width + i);
 			r32 w = (block_information->rf_table)[block_information->iteration][d];
 			current_pixel.r = *(block_information->image_bytes + j * block_information->image_information->width *
 				block_information->image_information->channels + i * block_information->image_information->channels);
@@ -79,11 +80,11 @@ intern s32 _stdcall fill_blocks_from_epilogues_thread_proc(void* thread_informat
 			last_pixel.b = ((1 - w) * current_pixel.b + w * last_pixel.b);
 
 			*(block_information->image_result + j * block_information->image_information->width *
-				block_information->image_information->channels + i * block_information->image_information->channels) = (u8)r32_round(last_pixel.r);
+				block_information->image_information->channels + i * block_information->image_information->channels) = last_pixel.r;
 			*(block_information->image_result + j * block_information->image_information->width *
-				block_information->image_information->channels + i * block_information->image_information->channels + 1) = (u8)r32_round(last_pixel.g);
+				block_information->image_information->channels + i * block_information->image_information->channels + 1) = last_pixel.g;
 			*(block_information->image_result + j * block_information->image_information->width *
-				block_information->image_information->channels + i * block_information->image_information->channels + 2) = (u8)r32_round(last_pixel.b);
+				block_information->image_information->channels + i * block_information->image_information->channels + 2) = last_pixel.b;
 			*(block_information->image_result + j * block_information->image_information->width *
 				block_information->image_information->channels + i * block_information->image_information->channels + 3) = 255;
 		}
@@ -92,7 +93,7 @@ intern s32 _stdcall fill_blocks_from_epilogues_thread_proc(void* thread_informat
 	return 0;
 }
 
-extern void calculate_blocks_from_epilogues(const u8* image_bytes,
+extern void calculate_blocks_from_epilogues(const r32* image_bytes,
 	Image_Information* image_information,
 	r32** epilogues,
 	s32 parallelism_level_x,
@@ -102,7 +103,7 @@ extern void calculate_blocks_from_epilogues(const u8* image_bytes,
 	r32** rf_table,
 	s32 iteration,
 	s32 number_of_threads,
-	u8* image_result)
+	r32* image_result)
 {
 	Thread_Block_Epilogue_Information* thread_informations = (Thread_Block_Epilogue_Information*)alloc_memory(sizeof(Thread_Block_Epilogue_Information)
 		* parallelism_level_x * parallelism_level_y);
@@ -131,9 +132,9 @@ extern void calculate_blocks_from_epilogues(const u8* image_bytes,
 	s32 num_active_threads = 0;
 
 	// Calculate Blocks
-	for (s32 i = 0; i < parallelism_level_x; ++i)
+	for (s32 i = 0; i < parallelism_level_y; ++i)
 	{
-		for (s32 j = 0; j < parallelism_level_y; ++j)
+		for (s32 j = 0; j < parallelism_level_x; ++j)
 		{
 			active_threads[num_active_threads++] = create_thread(fill_blocks_from_epilogues_thread_proc, thread_informations + i * parallelism_level_x + j);
 
@@ -163,7 +164,8 @@ intern s32 _stdcall fill_incomplete_epilogues_thread_proc(void* thread_informati
 
 		for (s32 j = epilogue_information->block->y + epilogue_information->block->height - 1; j >= epilogue_information->block->y; --j)
 		{
-			s32 d = *(epilogue_information->domain_transforms + j * epilogue_information->image_information->width + i);
+			s32 d_y_position = (j < epilogue_information->image_information->height - 1) ? j + 1 : j;
+			s32 d = *(epilogue_information->domain_transforms + d_y_position * epilogue_information->image_information->width + i);
 			r32 w = (epilogue_information->rf_table)[epilogue_information->iteration][d];
 			current_pixel.r = *(epilogue_information->image_bytes + j * epilogue_information->image_information->width *
 				epilogue_information->image_information->channels + i * epilogue_information->image_information->channels);
@@ -187,7 +189,7 @@ intern s32 _stdcall fill_incomplete_epilogues_thread_proc(void* thread_informati
 	return 0;
 }
 
-extern void calculate_incomplete_epilogues(const u8* image_bytes,
+extern void calculate_incomplete_epilogues(const r32* image_bytes,
 	Image_Information* image_information,
 	r32** epilogues,
 	r32** last_epilogue_contributions,

@@ -13,7 +13,6 @@ typedef float r32;
 typedef double r64;
 
 typedef struct Struct_Block Block;
-typedef struct Struct_Color Color;
 typedef struct Struct_R32_Color R32_Color;
 typedef struct Struct_Image_Information Image_Information;
 
@@ -25,12 +24,6 @@ struct Struct_Block
 	s32 height;
 };
 
-struct Struct_Color
-{
-	u8 r;
-	u8 g;
-	u8 b;
-};
 struct Struct_R32_Color
 {
 	r32 r;

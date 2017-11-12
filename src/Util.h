@@ -11,7 +11,7 @@ extern void* alloc_memory(const s32 size);
 extern void dealloc_memory(void* ptr);
 extern void* create_thread(THREAD_FUNCTION function, void* parameters);
 extern s32 join_threads(s32 number_of_threads, void** threads_array, s32 wait_all);
-extern s32 absolute(s32 x);
+extern r32 absolute(r32 x);
 extern r32 r32_pow(r32 b, r32 e);
 extern r32 r32_sqrt(r32 v);
 extern r32 r32_exp(r32 v);

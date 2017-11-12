@@ -10,7 +10,7 @@ typedef struct Struct_Thread_Block_EpilogueT_Information Thread_Block_EpilogueT_
 struct Struct_Thread_Incomplete_EpilogueT_Information
 {
 	IN const Block* block;
-	IN const u8* image_bytes;
+	IN const r32* image_bytes;
 	IN const Image_Information* image_information;
 	IN s32* domain_transforms;
 	IN r32** rf_table;
@@ -22,16 +22,16 @@ struct Struct_Thread_Incomplete_EpilogueT_Information
 struct Struct_Thread_Block_EpilogueT_Information
 {
 	IN const Block* block;
-	IN const u8* image_bytes;
+	IN const r32* image_bytes;
 	IN const Image_Information* image_information;
 	IN s32* domain_transforms;
 	IN r32** rf_table;
 	IN s32 iteration;
 	IN r32* last_epiloguesT;
-	OUT u8* image_result;
+	OUT r32* image_result;
 };
 
-extern void calculate_incomplete_epiloguesT(const u8* image_bytes,
+extern void calculate_incomplete_epiloguesT(const r32* image_bytes,
 	Image_Information* image_information,
 	r32** epiloguesT,
 	r32** last_epilogueT_contributions,
@@ -43,7 +43,7 @@ extern void calculate_incomplete_epiloguesT(const u8* image_bytes,
 	s32 iteration,
 	s32 number_of_threads);
 
-extern void calculate_blocks_from_epiloguesT(const u8* image_bytes,
+extern void calculate_blocks_from_epiloguesT(const r32* image_bytes,
 	Image_Information* image_information,
 	r32** epiloguesT,
 	s32 parallelism_level_x,
@@ -53,7 +53,7 @@ extern void calculate_blocks_from_epiloguesT(const u8* image_bytes,
 	r32** rf_table,
 	s32 iteration,
 	s32 number_of_threads,
-	u8* image_result);
+	r32* image_result);
 
 extern void calculate_complete_epiloguesT(Image_Information* image_information,
 	r32** complete_epiloguesT,

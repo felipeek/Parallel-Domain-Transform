@@ -9,14 +9,72 @@
 
 #define DEFAULT_IMAGE_PATH ".\\res\\image.png"
 #define DEFAULT_SPATIAL_FACTOR 50.0f
-#define DEFAULT_RANGE_FACTOR 50000.0f
+#define DEFAULT_RANGE_FACTOR 50.0f
 #define DEFAULT_NUM_ITERATIONS 4
-#define DEFAULT_PARALLELISM_LEVEL_X 17
-#define DEFAULT_PARALLELISM_LEVEL_Y 17
+#define DEFAULT_PARALLELISM_LEVEL_X 16
+#define DEFAULT_PARALLELISM_LEVEL_Y 16
 #define DEFAULT_NUMBER_OF_THREADS 1
 #define DEFAULT_COLLECT_TIME 0
 #define DEFAULT_RESULT_PATH ".\\res\\output.png"
 #define DEFAULT_IMAGE_CHANNELS 4
+
+intern r32* load_image(const s8* image_path,
+	s32* image_width,
+	s32* image_height,
+	s32* image_channels,
+	s32 desired_channels)
+{
+	u8* auxiliary_data = stbi_load(image_path, image_width, image_height, image_channels, DEFAULT_IMAGE_CHANNELS);
+
+	if (auxiliary_data == 0)
+		return 0;
+
+	// @TODO: check WHY this is happing
+	*image_channels = 4;
+
+	r32* image_data = (r32*)alloc_memory(sizeof(r32) * *image_height * *image_width * *image_channels);
+
+	for (s32 i = 0; i < *image_height; ++i)
+	{
+		for (s32 j = 0; j < *image_width; ++j)
+		{
+			*(image_data + i * *image_width * *image_channels + j * *image_channels) =
+				*(auxiliary_data + i * *image_width * *image_channels + j * *image_channels) / 255.0f;
+			*(image_data + i * *image_width * *image_channels + j * *image_channels + 1) =
+				*(auxiliary_data + i * *image_width * *image_channels + j * *image_channels + 1) / 255.0f;
+			*(image_data + i * *image_width * *image_channels + j * *image_channels + 2) =
+				*(auxiliary_data + i * *image_width * *image_channels + j * *image_channels + 2) / 255.0f;
+			*(image_data + i * *image_width * *image_channels + j * *image_channels + 3) = 1.0f;
+		}
+	}
+
+	stbi_image_free(auxiliary_data);
+
+	return image_data;
+}
+
+intern void store_image(const s8* result_path,
+	s32 image_width,
+	s32 image_height,
+	s32 image_channels,
+	const r32* image_bytes)
+{
+	u8* auxiliary_data = (u8*)alloc_memory(image_height * image_width * sizeof(u8) * image_channels);
+
+	for (s32 i = 0; i < image_height; ++i)
+	{
+		for (s32 j = 0; j < image_width; ++j)
+		{
+			*(auxiliary_data + i * image_width * image_channels + j * image_channels) = (u8)r32_round(255.0f * *(image_bytes + i * image_width * image_channels + j * image_channels));
+			*(auxiliary_data + i * image_width * image_channels + j * image_channels + 1) = (u8)r32_round(255.0f * *(image_bytes + i * image_width * image_channels + j * image_channels + 1));
+			*(auxiliary_data + i * image_width * image_channels + j * image_channels + 2) = (u8)r32_round(255.0f * *(image_bytes + i * image_width * image_channels + j * image_channels + 2));
+			*(auxiliary_data + i * image_width * image_channels + j * image_channels + 3) = 255;
+		}
+	}
+
+	stbi_write_png(result_path, image_width, image_height, image_channels, auxiliary_data, image_width * image_channels);
+	dealloc_memory(auxiliary_data);
+}
 
 intern void print_help_message(const s8* exe_name)
 {
@@ -107,13 +165,10 @@ extern s32 main(s32 argc, s8** argv)
 	}
 
 	s32 image_width, image_height, image_channels;
-	u8* image_bytes;
-	u8* image_result;
+	r32* image_bytes;
+	r32* image_result;
 
-	image_bytes = stbi_load(image_path, &image_width, &image_height, &image_channels, DEFAULT_IMAGE_CHANNELS);
-
-	// @TODO: check WHY this is happing
-	image_channels = 4;
+	image_bytes = load_image(image_path, &image_width, &image_height, &image_channels, DEFAULT_IMAGE_CHANNELS);
 
 	if (!image_bytes)
 	{
@@ -121,7 +176,7 @@ extern s32 main(s32 argc, s8** argv)
 		return -1;
 	}
 
-	image_result = (u8*)alloc_memory(sizeof(u8) * image_width * image_height * image_channels);
+	image_result = (r32*)alloc_memory(sizeof(r32) * image_width * image_height * image_channels);
 
 	start_clock();
 
@@ -141,9 +196,9 @@ extern s32 main(s32 argc, s8** argv)
 	if (collect_time)
 		print("Total time: %.3f seconds\n", total_time);
 
-	stbi_write_png(result_path, image_width, image_height, image_channels, image_result, image_width * image_channels);
+	store_image(result_path, image_width, image_height, image_channels, image_result);
 
-	stbi_image_free(image_bytes);
+	dealloc_memory(image_bytes);
 	dealloc_memory(image_result);
 
 	return 0;

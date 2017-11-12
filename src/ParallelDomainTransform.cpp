@@ -4,8 +4,6 @@
 #include "Epilogue.h"
 #include "PrologueT.h"
 #include "EpilogueT.h"
-//#include <time.h>
-//#include <stdlib.h>
 
 // This should be 768, since we have 2^8 possible options for each channels.
 // Since domain transform is given by:
@@ -23,7 +21,7 @@ typedef struct Struct_Thread_DT_Information Thread_DT_Information;
 struct Struct_Thread_DT_Information
 {
 	IN const Block* block;
-	IN const u8* image_bytes;
+	IN const r32* image_bytes;
 	IN const Image_Information* image_information;
 	OUT s32* vertical_domain_transforms;
 	OUT s32* horizontal_domain_transforms;
@@ -32,9 +30,10 @@ struct Struct_Thread_DT_Information
 intern s32 _stdcall fill_block_domain_transforms_thread_proc(void* thread_dt_information)
 {
 	Thread_DT_Information* vdt_information = (Thread_DT_Information*)thread_dt_information;
-	Color last_pixel;
-	Color current_pixel;
-	s32 d, sum_channels_difference;
+	R32_Color last_pixel;
+	R32_Color current_pixel;
+	r32 sum_channels_difference;
+	s32 d;
 
 	// Fill Horizontal Domain Transforms
 	for (s32 i = vdt_information->block->y; i < vdt_information->block->y + vdt_information->block->height; ++i)
@@ -74,7 +73,7 @@ intern s32 _stdcall fill_block_domain_transforms_thread_proc(void* thread_dt_inf
 			// 1.0f + s_s / s_r will be calculated later when calculating the RF table.
 			// This is done this way because the sum_diff is perfect to be used as the index of the RF table.
 			// d = 1.0f + (vdt_information->spatial_factor / vdt_information->range_factor) * sum_channels_difference;
-			d = sum_channels_difference;
+			d = (s32)r32_round(sum_channels_difference * 255.0f);
 
 			*(vdt_information->horizontal_domain_transforms + i * vdt_information->image_information->width + j) = d;
 
@@ -122,7 +121,7 @@ intern s32 _stdcall fill_block_domain_transforms_thread_proc(void* thread_dt_inf
 			// 1.0f + s_s / s_r will be calculated later when calculating the RF table.
 			// This is done this way because the sum_diff is perfect to be used as the index of the RF table.
 			// d = 1.0f + (vdt_information->spatial_factor / vdt_information->range_factor) * sum_channels_difference;
-			d = sum_channels_difference;
+			d = (s32)r32_round(sum_channels_difference * 255.0f);
 
 			*(vdt_information->vertical_domain_transforms + j * vdt_information->image_information->width + i) = d;
 			
@@ -137,7 +136,7 @@ intern s32 _stdcall fill_block_domain_transforms_thread_proc(void* thread_dt_inf
 
 intern void fill_domain_transforms(s32* vertical_domain_transforms,
 	s32* horizontal_domain_transforms,
-	const u8* image_bytes,
+	const r32* image_bytes,
 	const Image_Information* image_information,
 	r32 spatial_factor,
 	r32 range_factor,
@@ -183,10 +182,10 @@ intern void fill_domain_transforms(s32* vertical_domain_transforms,
 	dealloc_memory(active_threads);
 }
 
-intern void paint_block(u8* img_data,
+intern void paint_block(r32* img_data,
 	Image_Information* img,
 	const Block* b,
-	const Color* c)
+	const R32_Color* c)
 {
 	for (s32 i = b->y; i < b->y + b->height; ++i)
 	{
@@ -199,7 +198,7 @@ intern void paint_block(u8* img_data,
 	}
 }
 
-extern s32 parallel_domain_transform(const u8* image_bytes,
+extern s32 parallel_domain_transform(const r32* image_bytes,
 	s32 image_width,
 	s32 image_height,
 	s32 image_channels,
@@ -209,15 +208,13 @@ extern s32 parallel_domain_transform(const u8* image_bytes,
 	s32 number_of_threads,
 	s32 parallelism_level_x,
 	s32 parallelism_level_y,
-	u8* image_result)
+	r32* image_result)
 {
 	Image_Information image_information;
 
 	image_information.height = image_height;
 	image_information.width = image_width;
 	image_information.channels = image_channels;
-
-	copy_memory(image_result, image_bytes, image_width * image_height * image_channels);
 
 	// Separate image in blocks.
 	Block* image_blocks = (Block*)alloc_memory(sizeof(Block) * parallelism_level_x * parallelism_level_y);
@@ -245,22 +242,6 @@ extern s32 parallel_domain_transform(const u8* image_bytes,
 		blocks_accumulate_y = blocks_accumulate_y + current_block_height;
 		blocks_accumulate_x = 0;
 	}
-
-#if 0
-	srand(time(0));
-
-	for (s32 i = 0; i < parallelism_level_y; ++i)
-	{
-		for (s32 j = 0; j < parallelism_level_x; ++j)
-		{
-			Color c;
-			c.r = (u8)(rand() % 256);
-			c.g = (u8)(rand() % 256);
-			c.b = (u8)(rand() % 256);
-			paint_block(image_result, &image_information, image_blocks + i * parallelism_level_x + j, &c);
-		}
-	}
-#endif
 
 	// Pre-calculate RF feedback coefficients
 	r32* rf_coefficients = (r32*)alloc_memory(sizeof(r32) * num_iterations);
@@ -312,17 +293,31 @@ extern s32 parallel_domain_transform(const u8* image_bytes,
 		r32** prologues = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
 		r32** last_prologue_contributions = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
 		
-		calculate_incomplete_prologues(image_result,
-			&image_information,
-			prologues,
-			last_prologue_contributions,
-			parallelism_level_x,
-			parallelism_level_y,
-			image_blocks,
-			vertical_domain_transforms,
-			rf_table,
-			i,
-			number_of_threads);
+		// if first iteration, send image_bytes.
+		if (i == 0)
+			calculate_incomplete_prologues(image_bytes,
+				&image_information,
+				prologues,
+				last_prologue_contributions,
+				parallelism_level_x,
+				parallelism_level_y,
+				image_blocks,
+				vertical_domain_transforms,
+				rf_table,
+				i,
+				number_of_threads);
+		else
+			calculate_incomplete_prologues(image_result,
+				&image_information,
+				prologues,
+				last_prologue_contributions,
+				parallelism_level_x,
+				parallelism_level_y,
+				image_blocks,
+				vertical_domain_transforms,
+				rf_table,
+				i,
+				number_of_threads);
 		
 		// Calculate Complete Prologues
 		calculate_complete_prologues(&image_information,
@@ -360,7 +355,7 @@ extern s32 parallel_domain_transform(const u8* image_bytes,
 		// Calculate Incomplete Epilogues
 		r32** epilogues = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
 		r32** last_epilogue_contributions = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
-
+		
 		calculate_incomplete_epilogues(image_result,
 			&image_information,
 			epilogues,
@@ -372,7 +367,7 @@ extern s32 parallel_domain_transform(const u8* image_bytes,
 			rf_table,
 			i,
 			number_of_threads);
-
+		
 		// Calculate Complete Epilogues
 		calculate_complete_epilogues(&image_information,
 			epilogues,
@@ -381,7 +376,7 @@ extern s32 parallel_domain_transform(const u8* image_bytes,
 			image_blocks,
 			parallelism_level_x,
 			parallelism_level_y);
-
+		
 		// Calculate Full Blocks From Epilogues
 		calculate_blocks_from_epilogues(image_result,
 			&image_information,
@@ -394,22 +389,22 @@ extern s32 parallel_domain_transform(const u8* image_bytes,
 			i,
 			number_of_threads,
 			image_result);
-
+		
 		// Dealloc memory
 		for (s32 i = 0; i < parallelism_level_y; ++i)
 			for (s32 j = 0; j < parallelism_level_x; ++j)
 				dealloc_memory(*(epilogues + i * parallelism_level_x + j));
 		dealloc_memory(epilogues);
-
+		
 		for (s32 i = 0; i < parallelism_level_y; ++i)
 			for (s32 j = 0; j < parallelism_level_x; ++j)
 				dealloc_memory(*(last_epilogue_contributions + i * parallelism_level_x + j));
 		dealloc_memory(last_epilogue_contributions);
-
-		// Calculate Incomplete ProloguesT
+		
+		//// Calculate Incomplete ProloguesT
 		r32** prologuesT = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
 		r32** last_prologueT_contributions = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
-
+		
 		calculate_incomplete_prologuesT(image_result,
 			&image_information,
 			prologuesT,
@@ -417,11 +412,11 @@ extern s32 parallel_domain_transform(const u8* image_bytes,
 			parallelism_level_x,
 			parallelism_level_y,
 			image_blocks,
-			vertical_domain_transforms,
+			horizontal_domain_transforms,
 			rf_table,
 			i,
 			number_of_threads);
-
+		
 		// Calculate Complete ProloguesT
 		calculate_complete_prologuesT(&image_information,
 			prologuesT,
@@ -430,7 +425,7 @@ extern s32 parallel_domain_transform(const u8* image_bytes,
 			image_blocks,
 			parallelism_level_x,
 			parallelism_level_y);
-
+		
 		// Calculate Full Blocks From ProloguesT
 		calculate_blocks_from_prologuesT(image_result,
 			&image_information,
@@ -438,27 +433,27 @@ extern s32 parallel_domain_transform(const u8* image_bytes,
 			parallelism_level_x,
 			parallelism_level_y,
 			image_blocks,
-			vertical_domain_transforms,
+			horizontal_domain_transforms,
 			rf_table,
 			i,
 			number_of_threads,
 			image_result);
-
+		
 		// Dealloc memory
 		for (s32 i = 0; i < parallelism_level_y; ++i)
 			for (s32 j = 0; j < parallelism_level_x; ++j)
 				dealloc_memory(*(prologuesT + i * parallelism_level_x + j));
 		dealloc_memory(prologuesT);
-
+		
 		for (s32 i = 0; i < parallelism_level_y; ++i)
 			for (s32 j = 0; j < parallelism_level_x; ++j)
 				dealloc_memory(*(last_prologueT_contributions + i * parallelism_level_x + j));
 		dealloc_memory(last_prologueT_contributions);
-
+		
 		// Calculate Incomplete EpiloguesT
 		r32** epiloguesT = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
 		r32** last_epilogueT_contributions = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
-
+		
 		calculate_incomplete_epiloguesT(image_result,
 			&image_information,
 			epiloguesT,
@@ -466,11 +461,11 @@ extern s32 parallel_domain_transform(const u8* image_bytes,
 			parallelism_level_x,
 			parallelism_level_y,
 			image_blocks,
-			vertical_domain_transforms,
+			horizontal_domain_transforms,
 			rf_table,
 			i,
 			number_of_threads);
-
+		
 		// Calculate Complete EpiloguesT
 		calculate_complete_epiloguesT(&image_information,
 			epiloguesT,
@@ -479,7 +474,7 @@ extern s32 parallel_domain_transform(const u8* image_bytes,
 			image_blocks,
 			parallelism_level_x,
 			parallelism_level_y);
-
+		
 		// Calculate Full Blocks From EpiloguesT
 		calculate_blocks_from_epiloguesT(image_result,
 			&image_information,
@@ -487,18 +482,18 @@ extern s32 parallel_domain_transform(const u8* image_bytes,
 			parallelism_level_x,
 			parallelism_level_y,
 			image_blocks,
-			vertical_domain_transforms,
+			horizontal_domain_transforms,
 			rf_table,
 			i,
 			number_of_threads,
 			image_result);
-
+		
 		// Dealloc memory
 		for (s32 i = 0; i < parallelism_level_y; ++i)
 			for (s32 j = 0; j < parallelism_level_x; ++j)
 				dealloc_memory(*(epiloguesT + i * parallelism_level_x + j));
 		dealloc_memory(epiloguesT);
-
+		
 		for (s32 i = 0; i < parallelism_level_y; ++i)
 			for (s32 j = 0; j < parallelism_level_x; ++j)
 				dealloc_memory(*(last_epilogueT_contributions + i * parallelism_level_x + j));

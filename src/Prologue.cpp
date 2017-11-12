@@ -79,11 +79,11 @@ intern s32 _stdcall fill_blocks_from_prologues_thread_proc(void* thread_informat
 			last_pixel.b = ((1 - w) * current_pixel.b + w * last_pixel.b);
 
 			*(block_information->image_result + j * block_information->image_information->width *
-				block_information->image_information->channels + i * block_information->image_information->channels) = (u8)r32_round(last_pixel.r);
+				block_information->image_information->channels + i * block_information->image_information->channels) = last_pixel.r;
 			*(block_information->image_result + j * block_information->image_information->width *
-				block_information->image_information->channels + i * block_information->image_information->channels + 1) = (u8)r32_round(last_pixel.g);
+				block_information->image_information->channels + i * block_information->image_information->channels + 1) = last_pixel.g;
 			*(block_information->image_result + j * block_information->image_information->width *
-				block_information->image_information->channels + i * block_information->image_information->channels + 2) = (u8)r32_round(last_pixel.b);
+				block_information->image_information->channels + i * block_information->image_information->channels + 2) = last_pixel.b;
 			*(block_information->image_result + j * block_information->image_information->width *
 				block_information->image_information->channels + i * block_information->image_information->channels + 3) = 255;
 		}
@@ -92,7 +92,7 @@ intern s32 _stdcall fill_blocks_from_prologues_thread_proc(void* thread_informat
 	return 0;
 }
 
-extern void calculate_blocks_from_prologues(const u8* image_bytes,
+extern void calculate_blocks_from_prologues(const r32* image_bytes,
 	Image_Information* image_information,
 	r32** prologues,
 	s32 parallelism_level_x,
@@ -102,7 +102,7 @@ extern void calculate_blocks_from_prologues(const u8* image_bytes,
 	r32** rf_table,
 	s32 iteration,
 	s32 number_of_threads,
-	u8* image_result)
+	r32* image_result)
 {
 	Thread_Block_Prologue_Information* thread_informations = (Thread_Block_Prologue_Information*)alloc_memory(sizeof(Thread_Block_Prologue_Information)
 		* parallelism_level_x * parallelism_level_y);
@@ -131,9 +131,9 @@ extern void calculate_blocks_from_prologues(const u8* image_bytes,
 	s32 num_active_threads = 0;
 
 	// Calculate Blocks
-	for (s32 i = 0; i < parallelism_level_x; ++i)
+	for (s32 i = 0; i < parallelism_level_y; ++i)
 	{
-		for (s32 j = 0; j < parallelism_level_y; ++j)
+		for (s32 j = 0; j < parallelism_level_x; ++j)
 		{
 			active_threads[num_active_threads++] = create_thread(fill_blocks_from_prologues_thread_proc, thread_informations + i * parallelism_level_x + j);
 
@@ -187,7 +187,7 @@ intern s32 _stdcall fill_incomplete_prologues_thread_proc(void* thread_informati
 	return 0;
 }
 
-extern void calculate_incomplete_prologues(const u8* image_bytes,
+extern void calculate_incomplete_prologues(const r32* image_bytes,
 	Image_Information* image_information,
 	r32** prologues,
 	r32** last_prologue_contributions,

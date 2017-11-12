@@ -10,7 +10,7 @@ typedef struct Struct_Thread_Block_PrologueT_Information Thread_Block_PrologueT_
 struct Struct_Thread_Incomplete_PrologueT_Information
 {
 	IN const Block* block;
-	IN const u8* image_bytes;
+	IN const r32* image_bytes;
 	IN const Image_Information* image_information;
 	IN s32* domain_transforms;
 	IN r32** rf_table;
@@ -22,16 +22,16 @@ struct Struct_Thread_Incomplete_PrologueT_Information
 struct Struct_Thread_Block_PrologueT_Information
 {
 	IN const Block* block;
-	IN const u8* image_bytes;
+	IN const r32* image_bytes;
 	IN const Image_Information* image_information;
 	IN s32* domain_transforms;
 	IN r32** rf_table;
 	IN s32 iteration;
 	IN r32* last_prologuesT;
-	OUT u8* image_result;
+	OUT r32* image_result;
 };
 
-extern void calculate_incomplete_prologuesT(const u8* image_bytes,
+extern void calculate_incomplete_prologuesT(const r32* image_bytes,
 	Image_Information* image_information,
 	r32** prologuesT,
 	r32** last_prologueT_contributions,
@@ -43,7 +43,7 @@ extern void calculate_incomplete_prologuesT(const u8* image_bytes,
 	s32 iteration,
 	s32 number_of_threads);
 
-extern void calculate_blocks_from_prologuesT(const u8* image_bytes,
+extern void calculate_blocks_from_prologuesT(const r32* image_bytes,
 	Image_Information* image_information,
 	r32** prologuesT,
 	s32 parallelism_level_x,
@@ -53,7 +53,7 @@ extern void calculate_blocks_from_prologuesT(const u8* image_bytes,
 	r32** rf_table,
 	s32 iteration,
 	s32 number_of_threads,
-	u8* image_result);
+	r32* image_result);
 
 extern void calculate_complete_prologuesT(Image_Information* image_information,
 	r32** complete_prologuesT,

@@ -66,7 +66,7 @@ extern s32 join_threads(s32 number_of_threads, void** threads_array, s32 wait_al
 #endif
 }
 
-extern s32 absolute(s32 x)
+extern r32 absolute(r32 x)
 {
 	return (x < 0) ? -x : x;
 }
@@ -98,7 +98,7 @@ extern void* copy_memory(void* destination, const void* source, s32 num)
 
 extern void start_clock()
 {
-	clock_t aux = clock();
+	aux = clock();
 }
 
 extern r32 end_clock()
