@@ -7,14 +7,14 @@
 #include "Util.h"
 #include "ParallelDomainTransform.h"
 
-#define DEFAULT_IMAGE_PATH ".\\res\\image.png"
-#define DEFAULT_SPATIAL_FACTOR 50.0f
+#define DEFAULT_IMAGE_PATH ".\\res\\chosen.png"
+#define DEFAULT_SPATIAL_FACTOR 500.0f
 #define DEFAULT_RANGE_FACTOR 50.0f
 #define DEFAULT_NUM_ITERATIONS 4
 #define DEFAULT_PARALLELISM_LEVEL_X 16
 #define DEFAULT_PARALLELISM_LEVEL_Y 16
 #define DEFAULT_NUMBER_OF_THREADS 1
-#define DEFAULT_COLLECT_TIME 0
+#define DEFAULT_COLLECT_TIME 1
 #define DEFAULT_RESULT_PATH ".\\res\\output.png"
 #define DEFAULT_IMAGE_CHANNELS 4
 
@@ -86,7 +86,7 @@ intern void print_help_message(const s8* exe_name)
 	print("\tNumber of Iterations: -i <s32>\n");
 	print("\tParallelism Level (X Axis): -x <s32>\n");
 	print("\tParallelism Level (Y Axis): -y <s32>\n");
-	print("\tNumber of Threads: -t <s32>\n");
+	print("\tNumber of Threads (MAX 64): -t <s32>\n");
 	print("\tCollect Time: -c <1 or 0>\n");
 	print("\tResult Path: -o <string>\n");
 	print("\tHelp: -h\n");
@@ -139,6 +139,12 @@ extern s32 main(s32 argc, s8** argv)
 				// Number of Threads
 				case 't': {
 					number_of_threads = str_to_s32(argv[i + 1]);
+					if (number_of_threads > 64)
+					{
+						print("Warning: The maximum number of threads is 64.\n");
+						print("The number of threads was automatically modified to 64.\n");
+						number_of_threads = 64;
+					}
 				} break;
 				// Collect Time
 				case 'c': {
