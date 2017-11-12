@@ -9,10 +9,10 @@
 
 #define DEFAULT_IMAGE_PATH ".\\res\\image.png"
 #define DEFAULT_SPATIAL_FACTOR 50.0f
-#define DEFAULT_RANGE_FACTOR 4.0f
+#define DEFAULT_RANGE_FACTOR 50000.0f
 #define DEFAULT_NUM_ITERATIONS 4
-#define DEFAULT_PARALLELISM_LEVEL_X 1
-#define DEFAULT_PARALLELISM_LEVEL_Y 1
+#define DEFAULT_PARALLELISM_LEVEL_X 17
+#define DEFAULT_PARALLELISM_LEVEL_Y 17
 #define DEFAULT_NUMBER_OF_THREADS 1
 #define DEFAULT_COLLECT_TIME 0
 #define DEFAULT_RESULT_PATH ".\\res\\output.png"
@@ -112,6 +112,9 @@ extern s32 main(s32 argc, s8** argv)
 
 	image_bytes = stbi_load(image_path, &image_width, &image_height, &image_channels, DEFAULT_IMAGE_CHANNELS);
 
+	// @TODO: check WHY this is happing
+	image_channels = 4;
+
 	if (!image_bytes)
 	{
 		print("Error: Could not load image %s\n", image_path);
@@ -120,8 +123,12 @@ extern s32 main(s32 argc, s8** argv)
 
 	image_result = (u8*)alloc_memory(sizeof(u8) * image_width * image_height * image_channels);
 
+	start_clock();
+
 	s32 domain_transform_error_code = parallel_domain_transform(image_bytes, image_width, image_height, image_channels, spatial_factor, range_factor,
 		num_iterations, number_of_threads, parallelism_level_x, parallelism_level_y, image_result);
+
+	r32 total_time = end_clock();
 
 	switch (domain_transform_error_code)
 	{
@@ -130,6 +137,9 @@ extern s32 main(s32 argc, s8** argv)
 		return -1;
 	} break;
 	}
+
+	if (collect_time)
+		print("Total time: %.3f seconds\n", total_time);
 
 	stbi_write_png(result_path, image_width, image_height, image_channels, image_result, image_width * image_channels);
 
