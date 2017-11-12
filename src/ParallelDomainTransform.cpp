@@ -277,7 +277,7 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 
 	fill_domain_transforms(vertical_domain_transforms,
 		horizontal_domain_transforms,
-		image_result,
+		image_bytes,
 		&image_information,
 		spatial_factor,
 		range_factor,
@@ -329,17 +329,31 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 			parallelism_level_y);
 		
 		// Calculate Full Blocks From Prologues
-		calculate_blocks_from_prologues(image_result,
-			&image_information,
-			prologues,
-			parallelism_level_x,
-			parallelism_level_y,
-			image_blocks,
-			vertical_domain_transforms,
-			rf_table,
-			i,
-			number_of_threads,
-			image_result);
+		// if first iteration, send image_bytes.
+		if (i == 0)
+			calculate_blocks_from_prologues(image_bytes,
+				&image_information,
+				prologues,
+				parallelism_level_x,
+				parallelism_level_y,
+				image_blocks,
+				vertical_domain_transforms,
+				rf_table,
+				i,
+				number_of_threads,
+				image_result);
+		else
+			calculate_blocks_from_prologues(image_result,
+				&image_information,
+				prologues,
+				parallelism_level_x,
+				parallelism_level_y,
+				image_blocks,
+				vertical_domain_transforms,
+				rf_table,
+				i,
+				number_of_threads,
+				image_result);
 		
 		// Dealloc memory
 		for (s32 i = 0; i < parallelism_level_y; ++i)
