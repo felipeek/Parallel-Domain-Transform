@@ -40,31 +40,31 @@ intern s32 _stdcall fill_block_domain_transforms_thread_proc(void* thread_dt_inf
 	{
 		if (vdt_information->block->x != 0)
 		{
-			last_pixel.r = *(vdt_information->image_bytes + i * vdt_information->image_information->width * vdt_information->image_information->channels +
-				(vdt_information->block->x - 1) * vdt_information->image_information->channels);
-			last_pixel.g = *(vdt_information->image_bytes + i * vdt_information->image_information->width * vdt_information->image_information->channels +
-				(vdt_information->block->x - 1) * vdt_information->image_information->channels + 1);
-			last_pixel.b = *(vdt_information->image_bytes + i * vdt_information->image_information->width * vdt_information->image_information->channels +
-				(vdt_information->block->x - 1) * vdt_information->image_information->channels + 2);
+			last_pixel.r = vdt_information->image_bytes[i * vdt_information->image_information->width * vdt_information->image_information->channels +
+				(vdt_information->block->x - 1) * vdt_information->image_information->channels];
+			last_pixel.g = vdt_information->image_bytes[i * vdt_information->image_information->width * vdt_information->image_information->channels +
+				(vdt_information->block->x - 1) * vdt_information->image_information->channels + 1];
+			last_pixel.b = vdt_information->image_bytes[i * vdt_information->image_information->width * vdt_information->image_information->channels +
+				(vdt_information->block->x - 1) * vdt_information->image_information->channels + 2];
 		}
 		else
 		{
-			last_pixel.r = *(vdt_information->image_bytes + i * vdt_information->image_information->width * vdt_information->image_information->channels +
-				vdt_information->block->x * vdt_information->image_information->channels);
-			last_pixel.g = *(vdt_information->image_bytes + i * vdt_information->image_information->width * vdt_information->image_information->channels +
-				vdt_information->block->x * vdt_information->image_information->channels + 1);
-			last_pixel.b = *(vdt_information->image_bytes + i * vdt_information->image_information->width * vdt_information->image_information->channels +
-				vdt_information->block->x * vdt_information->image_information->channels + 2);
+			last_pixel.r = vdt_information->image_bytes[i * vdt_information->image_information->width * vdt_information->image_information->channels +
+				vdt_information->block->x * vdt_information->image_information->channels];
+			last_pixel.g = vdt_information->image_bytes[i * vdt_information->image_information->width * vdt_information->image_information->channels +
+				vdt_information->block->x * vdt_information->image_information->channels + 1];
+			last_pixel.b = vdt_information->image_bytes[i * vdt_information->image_information->width * vdt_information->image_information->channels +
+				vdt_information->block->x * vdt_information->image_information->channels + 2];
 		}
 
 		for (s32 j = vdt_information->block->x; j < vdt_information->block->x + vdt_information->block->width; ++j)
 		{
-			current_pixel.r = *(vdt_information->image_bytes + i * vdt_information->image_information->width * vdt_information->image_information->channels +
-				j * vdt_information->image_information->channels);
-			current_pixel.g = *(vdt_information->image_bytes + i * vdt_information->image_information->width * vdt_information->image_information->channels +
-				j * vdt_information->image_information->channels + 1);
-			current_pixel.b = *(vdt_information->image_bytes + i * vdt_information->image_information->width * vdt_information->image_information->channels +
-				j * vdt_information->image_information->channels + 2);
+			current_pixel.r = vdt_information->image_bytes[i * vdt_information->image_information->width * vdt_information->image_information->channels +
+				j * vdt_information->image_information->channels];
+			current_pixel.g = vdt_information->image_bytes[i * vdt_information->image_information->width * vdt_information->image_information->channels +
+				j * vdt_information->image_information->channels + 1];
+			current_pixel.b = vdt_information->image_bytes[i * vdt_information->image_information->width * vdt_information->image_information->channels +
+				j * vdt_information->image_information->channels + 2];
 
 			sum_channels_difference = absolute(current_pixel.r - last_pixel.r) + absolute(current_pixel.g - last_pixel.g) + absolute(current_pixel.b - last_pixel.b);
 
@@ -75,7 +75,7 @@ intern s32 _stdcall fill_block_domain_transforms_thread_proc(void* thread_dt_inf
 			// d = 1.0f + (vdt_information->spatial_factor / vdt_information->range_factor) * sum_channels_difference;
 			d = (s32)r32_round(sum_channels_difference * 255.0f);
 
-			*(vdt_information->horizontal_domain_transforms + i * vdt_information->image_information->width + j) = d;
+			vdt_information->horizontal_domain_transforms[i * vdt_information->image_information->width + j] = d;
 
 			last_pixel.r = current_pixel.r;
 			last_pixel.g = current_pixel.g;
@@ -88,31 +88,31 @@ intern s32 _stdcall fill_block_domain_transforms_thread_proc(void* thread_dt_inf
 	{
 		if (vdt_information->block->y != 0)
 		{
-			last_pixel.r = *(vdt_information->image_bytes + (vdt_information->block->y - 1) * vdt_information->image_information->width *
-				vdt_information->image_information->channels + i * vdt_information->image_information->channels);
-			last_pixel.g = *(vdt_information->image_bytes + (vdt_information->block->y - 1) * vdt_information->image_information->width *
-				vdt_information->image_information->channels + i * vdt_information->image_information->channels + 1);
-			last_pixel.b = *(vdt_information->image_bytes + (vdt_information->block->y - 1) * vdt_information->image_information->width *
-				vdt_information->image_information->channels + i * vdt_information->image_information->channels + 2);
+			last_pixel.r = vdt_information->image_bytes[(vdt_information->block->y - 1) * vdt_information->image_information->width *
+				vdt_information->image_information->channels + i * vdt_information->image_information->channels];
+			last_pixel.g = vdt_information->image_bytes[(vdt_information->block->y - 1) * vdt_information->image_information->width *
+				vdt_information->image_information->channels + i * vdt_information->image_information->channels + 1];
+			last_pixel.b = vdt_information->image_bytes[(vdt_information->block->y - 1) * vdt_information->image_information->width *
+				vdt_information->image_information->channels + i * vdt_information->image_information->channels + 2];
 		}
 		else
 		{
-			last_pixel.r = *(vdt_information->image_bytes + vdt_information->block->y * vdt_information->image_information->width *
-				vdt_information->image_information->channels + i * vdt_information->image_information->channels);
-			last_pixel.g = *(vdt_information->image_bytes + vdt_information->block->y * vdt_information->image_information->width *
-				vdt_information->image_information->channels + i * vdt_information->image_information->channels + 1);
-			last_pixel.b = *(vdt_information->image_bytes + vdt_information->block->y * vdt_information->image_information->width *
-				vdt_information->image_information->channels + i * vdt_information->image_information->channels + 2);
+			last_pixel.r = vdt_information->image_bytes[vdt_information->block->y * vdt_information->image_information->width *
+				vdt_information->image_information->channels + i * vdt_information->image_information->channels];
+			last_pixel.g = vdt_information->image_bytes[vdt_information->block->y * vdt_information->image_information->width *
+				vdt_information->image_information->channels + i * vdt_information->image_information->channels + 1];
+			last_pixel.b = vdt_information->image_bytes[vdt_information->block->y * vdt_information->image_information->width *
+				vdt_information->image_information->channels + i * vdt_information->image_information->channels + 2];
 		}
 
 		for (s32 j = vdt_information->block->y; j < vdt_information->block->y + vdt_information->block->height; ++j)
 		{
-			current_pixel.r = *(vdt_information->image_bytes + j * vdt_information->image_information->width * vdt_information->image_information->channels +
-				i * vdt_information->image_information->channels);
-			current_pixel.g = *(vdt_information->image_bytes + j * vdt_information->image_information->width * vdt_information->image_information->channels +
-				i * vdt_information->image_information->channels + 1);
-			current_pixel.b = *(vdt_information->image_bytes + j * vdt_information->image_information->width * vdt_information->image_information->channels +
-				i * vdt_information->image_information->channels + 2);
+			current_pixel.r = vdt_information->image_bytes[j * vdt_information->image_information->width * vdt_information->image_information->channels +
+				i * vdt_information->image_information->channels];
+			current_pixel.g = vdt_information->image_bytes[j * vdt_information->image_information->width * vdt_information->image_information->channels +
+				i * vdt_information->image_information->channels + 1];
+			current_pixel.b = vdt_information->image_bytes[j * vdt_information->image_information->width * vdt_information->image_information->channels +
+				i * vdt_information->image_information->channels + 2];
 
 			sum_channels_difference = absolute(current_pixel.r - last_pixel.r) + absolute(current_pixel.g - last_pixel.g) + absolute(current_pixel.b - last_pixel.b);
 
@@ -123,7 +123,7 @@ intern s32 _stdcall fill_block_domain_transforms_thread_proc(void* thread_dt_inf
 			// d = 1.0f + (vdt_information->spatial_factor / vdt_information->range_factor) * sum_channels_difference;
 			d = (s32)r32_round(sum_channels_difference * 255.0f);
 
-			*(vdt_information->vertical_domain_transforms + j * vdt_information->image_information->width + i) = d;
+			vdt_information->vertical_domain_transforms[j * vdt_information->image_information->width + i] = d;
 			
 			last_pixel.r = current_pixel.r;
 			last_pixel.g = current_pixel.g;
@@ -143,24 +143,23 @@ intern void fill_domain_transforms(s32* vertical_domain_transforms,
 	s32 number_of_threads,
 	s32 parallelism_level_x,
 	s32 parallelism_level_y,
-	const Block* image_blocks)
+	const Block* image_blocks,
+	Thread_DT_Information* thread_informations_memory,
+	void** active_threads_memory)
 {
-	Thread_DT_Information* dt_informations = (Thread_DT_Information*)alloc_memory(sizeof(Thread_DT_Information) * parallelism_level_x * parallelism_level_y);
-
 	// Fill DT Informations
 	for (s32 i = 0; i < parallelism_level_y; ++i)
 	{
 		for (s32 j = 0; j < parallelism_level_x; ++j)
 		{
-			(dt_informations + i * parallelism_level_x + j)->block = image_blocks + i * parallelism_level_x + j;
-			(dt_informations + i * parallelism_level_x + j)->image_bytes = image_bytes;
-			(dt_informations + i * parallelism_level_x + j)->image_information = image_information;
-			(dt_informations + i * parallelism_level_x + j)->vertical_domain_transforms = vertical_domain_transforms;
-			(dt_informations + i * parallelism_level_x + j)->horizontal_domain_transforms = horizontal_domain_transforms;
+			thread_informations_memory[i * parallelism_level_x + j].block = image_blocks + i * parallelism_level_x + j;
+			thread_informations_memory[i * parallelism_level_x + j].image_bytes = image_bytes;
+			thread_informations_memory[i * parallelism_level_x + j].image_information = image_information;
+			thread_informations_memory[i * parallelism_level_x + j].vertical_domain_transforms = vertical_domain_transforms;
+			thread_informations_memory[i * parallelism_level_x + j].horizontal_domain_transforms = horizontal_domain_transforms;
 		}
 	}
 
-	void** active_threads = (void**)alloc_memory(sizeof(void*) * number_of_threads);
 	s32 num_active_threads = 0;
 
 	// Fill Domain Transforms
@@ -168,18 +167,16 @@ intern void fill_domain_transforms(s32* vertical_domain_transforms,
 	{
 		for (s32 j = 0; j < parallelism_level_x; ++j)
 		{
-			active_threads[num_active_threads++] = create_thread(fill_block_domain_transforms_thread_proc, dt_informations + i * parallelism_level_x + j);
+			active_threads_memory[num_active_threads++] = create_thread(fill_block_domain_transforms_thread_proc, thread_informations_memory + i * parallelism_level_x + j);
 			if (num_active_threads == number_of_threads)
 			{
-				join_threads(num_active_threads, active_threads, 1);
+				join_threads(num_active_threads, active_threads_memory, 1);
 				num_active_threads = 0;
 			}
 		}
 	}
 
-	join_threads(num_active_threads, active_threads, 1);
-
-	dealloc_memory(active_threads);
+	join_threads(num_active_threads, active_threads_memory, 1);
 }
 
 intern void paint_block(r32* img_data,
@@ -191,9 +188,9 @@ intern void paint_block(r32* img_data,
 	{
 		for (s32 j = b->x; j < b->x + b->width; ++j)
 		{
-			*(img_data + i * img->width * img->channels + j * img->channels) = c->r;
-			*(img_data + i * img->width * img->channels + j * img->channels + 1) = c->g;
-			*(img_data + i * img->width * img->channels + j * img->channels + 2) = c->b;
+			img_data[i * img->width * img->channels + j * img->channels] = c->r;
+			img_data[i * img->width * img->channels + j * img->channels + 1] = c->g;
+			img_data[i * img->width * img->channels + j * img->channels + 2] = c->b;
 		}
 	}
 }
@@ -210,6 +207,9 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 	s32 parallelism_level_y,
 	r32* image_result)
 {
+	/* CRETE BLOCKS */
+	Block* image_blocks = (Block*)alloc_arena_memory(sizeof(Block) * parallelism_level_x * parallelism_level_y);
+
 	Image_Information image_information;
 
 	image_information.height = image_height;
@@ -217,7 +217,6 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 	image_information.channels = image_channels;
 
 	// Separate image in blocks.
-	Block* image_blocks = (Block*)alloc_memory(sizeof(Block) * parallelism_level_x * parallelism_level_y);
 	s32 blocks_accumulate_x = 0, blocks_accumulate_y = 0;
 	s32 current_block_width, current_block_height;
 
@@ -234,7 +233,7 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 			b.y = blocks_accumulate_y;
 			b.width = current_block_width;
 			b.height = current_block_height;
-			*(image_blocks + i * parallelism_level_x + j) = b;
+			image_blocks[i * parallelism_level_x + j] = b;
 
 			blocks_accumulate_x = blocks_accumulate_x + current_block_width;
 		}
@@ -243,9 +242,80 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 		blocks_accumulate_x = 0;
 	}
 
-	// Pre-calculate RF feedback coefficients
-	r32* rf_coefficients = (r32*)alloc_memory(sizeof(r32) * num_iterations);
+	/* PRE-ALLOC MEMORY */
 
+	r32* rf_coefficients = (r32*)alloc_arena_memory(sizeof(r32) * num_iterations);
+	r32** rf_table = (r32**)alloc_arena_memory(sizeof(r32*) * num_iterations);
+	for (s32 i = 0; i < num_iterations; ++i)
+		rf_table[i] = (r32*)alloc_arena_memory(sizeof(r32) * RF_TABLE_SIZE);
+	s32* vertical_domain_transforms = (s32*)alloc_arena_memory(sizeof(s32) * image_height * image_width);
+	s32* horizontal_domain_transforms = (s32*)alloc_arena_memory(sizeof(s32) * image_height * image_width);
+	void** active_threads_memory = (void**)alloc_arena_memory(sizeof(void*) * number_of_threads);
+	Thread_DT_Information* threads_informations_memory = (Thread_DT_Information*)alloc_arena_memory(sizeof(Thread_DT_Information) * parallelism_level_x * parallelism_level_y);
+	Thread_Incomplete_Prologue_Information* incomplete_prologue_thread_informations = (Thread_Incomplete_Prologue_Information*)alloc_arena_memory(sizeof(Thread_Incomplete_Prologue_Information)
+		* parallelism_level_x * parallelism_level_y);
+	Thread_Block_Prologue_Information* block_prologue_thread_informations = (Thread_Block_Prologue_Information*)alloc_arena_memory(sizeof(Thread_Block_Prologue_Information)
+		* parallelism_level_x * parallelism_level_y);
+	Thread_Block_Epilogue_Information* block_epilogue_thread_informations = (Thread_Block_Epilogue_Information*)alloc_arena_memory(sizeof(Thread_Block_Epilogue_Information)
+		* parallelism_level_x * parallelism_level_y);
+	Thread_Incomplete_Epilogue_Information* incomplete_epilogue_thread_informations = (Thread_Incomplete_Epilogue_Information*)alloc_arena_memory(sizeof(Thread_Incomplete_Epilogue_Information)
+		* parallelism_level_x * parallelism_level_y);
+	Thread_Incomplete_PrologueT_Information* incomplete_prologueT_thread_informations = (Thread_Incomplete_PrologueT_Information*)alloc_arena_memory(sizeof(Thread_Incomplete_PrologueT_Information)
+		* parallelism_level_x * parallelism_level_y);
+	Thread_Block_PrologueT_Information* block_prologueT_thread_informations = (Thread_Block_PrologueT_Information*)alloc_arena_memory(sizeof(Thread_Block_PrologueT_Information)
+		* parallelism_level_x * parallelism_level_y);
+	Thread_Block_EpilogueT_Information* block_epilogueT_thread_informations = (Thread_Block_EpilogueT_Information*)alloc_arena_memory(sizeof(Thread_Block_EpilogueT_Information)
+		* parallelism_level_x * parallelism_level_y);
+	Thread_Incomplete_EpilogueT_Information* incomplete_epilogueT_thread_informations = (Thread_Incomplete_EpilogueT_Information*)alloc_arena_memory(sizeof(Thread_Incomplete_EpilogueT_Information)
+		* parallelism_level_x * parallelism_level_y);
+	r32** prologues = (r32**)alloc_arena_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
+	r32** last_prologue_contributions = (r32**)alloc_arena_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
+	r32** epilogues = (r32**)alloc_arena_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
+	r32** last_epilogue_contributions = (r32**)alloc_arena_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
+	r32** prologuesT = (r32**)alloc_arena_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
+	r32** last_prologueT_contributions = (r32**)alloc_arena_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
+	r32** epiloguesT = (r32**)alloc_arena_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
+	r32** last_epilogueT_contributions = (r32**)alloc_arena_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
+
+	for (s32 i = 0; i < parallelism_level_y; ++i)
+		for (s32 j = 0; j < parallelism_level_x; ++j)
+		{
+			prologuesT[i * parallelism_level_x + j] = (r32*)alloc_arena_memory(sizeof(r32)
+				* image_blocks[i * parallelism_level_x + j].height * image_channels);
+			last_prologueT_contributions[i * parallelism_level_x + j] = (r32*)alloc_arena_memory(sizeof(r32)
+				* image_blocks[i * parallelism_level_x + j].height * image_channels);
+		}
+
+	for (s32 i = 0; i < parallelism_level_y; ++i)
+		for (s32 j = 0; j < parallelism_level_x; ++j)
+		{
+			epiloguesT[i * parallelism_level_x + j] = (r32*)alloc_arena_memory(sizeof(r32)
+				* image_blocks[i * parallelism_level_x + j].height * image_channels);
+			last_epilogueT_contributions[i * parallelism_level_x + j] = (r32*)alloc_arena_memory(sizeof(r32)
+				* image_blocks[i * parallelism_level_x + j].height * image_channels);
+		}
+
+	for (s32 i = 0; i < parallelism_level_y; ++i)
+		for (s32 j = 0; j < parallelism_level_x; ++j)
+		{
+			prologues[i * parallelism_level_x + j] = (r32*)alloc_arena_memory(sizeof(r32)
+				* image_blocks[i * parallelism_level_x + j].width * image_channels);
+			last_prologue_contributions[i * parallelism_level_x + j] = (r32*)alloc_arena_memory(sizeof(r32)
+				* image_blocks[i * parallelism_level_x + j].width * image_channels);
+		}
+
+	for (s32 i = 0; i < parallelism_level_y; ++i)
+		for (s32 j = 0; j < parallelism_level_x; ++j)
+		{
+			epilogues[i * parallelism_level_x + j] = (r32*)alloc_arena_memory(sizeof(r32)
+				* image_blocks[i * parallelism_level_x + j].width * image_channels);
+			last_epilogue_contributions[i * parallelism_level_x + j] = (r32*)alloc_arena_memory(sizeof(r32)
+				* image_blocks[i * parallelism_level_x + j].width * image_channels);
+		}
+
+	/* ************************ */
+
+	// Pre-calculate RF feedback coefficients
 	for (s32 i = 0; i < num_iterations; ++i)
 	{
 		// calculating RF feedback coefficient 'a' from desired variance
@@ -257,13 +327,10 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 	}
 
 	// Pre-calculate RF table
-	r32** rf_table = (r32**)alloc_memory(sizeof(r32*) * num_iterations);
 	r32 d;
 	
 	for (s32 i = 0; i < num_iterations; ++i)
 	{
-		rf_table[i] = (r32*)alloc_memory(sizeof(r32) * RF_TABLE_SIZE);
-
 		for (s32 j = 0; j < RF_TABLE_SIZE; ++j)
 		{
 			d = 1.0f + (spatial_factor / range_factor) * j;
@@ -272,9 +339,6 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 	}
 
 	// Pre-calculate Domain Transform
-	s32* vertical_domain_transforms = (s32*)alloc_memory(sizeof(s32) * image_height * image_width);
-	s32* horizontal_domain_transforms = (s32*)alloc_memory(sizeof(s32) * image_height * image_width);
-
 	fill_domain_transforms(vertical_domain_transforms,
 		horizontal_domain_transforms,
 		image_bytes,
@@ -284,15 +348,14 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 		number_of_threads,
 		parallelism_level_x,
 		parallelism_level_y,
-		image_blocks);
+		image_blocks,
+		threads_informations_memory,
+		active_threads_memory);
 
 	// Filter Iterations
 	for (s32 i = 0; i < num_iterations; ++i)
 	{
 		// Calculate Incomplete Prologues
-		r32** prologues = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
-		r32** last_prologue_contributions = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
-		
 		// if first iteration, send image_bytes.
 		if (i == 0)
 			calculate_incomplete_prologues(image_bytes,
@@ -305,7 +368,9 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 				vertical_domain_transforms,
 				rf_table,
 				i,
-				number_of_threads);
+				number_of_threads,
+				incomplete_prologue_thread_informations,
+				active_threads_memory);
 		else
 			calculate_incomplete_prologues(image_result,
 				&image_information,
@@ -317,7 +382,9 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 				vertical_domain_transforms,
 				rf_table,
 				i,
-				number_of_threads);
+				number_of_threads,
+				incomplete_prologue_thread_informations,
+				active_threads_memory);
 		
 		// Calculate Complete Prologues
 		calculate_complete_prologues(&image_information,
@@ -341,7 +408,9 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 				rf_table,
 				i,
 				number_of_threads,
-				image_result);
+				image_result,
+				block_prologue_thread_informations,
+				active_threads_memory);
 		else
 			calculate_blocks_from_prologues(image_result,
 				&image_information,
@@ -353,23 +422,11 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 				rf_table,
 				i,
 				number_of_threads,
-				image_result);
+				image_result,
+				block_prologue_thread_informations,
+				active_threads_memory);
 		
-		// Dealloc memory
-		for (s32 i = 0; i < parallelism_level_y; ++i)
-			for (s32 j = 0; j < parallelism_level_x; ++j)
-				dealloc_memory(*(prologues + i * parallelism_level_x + j));
-		dealloc_memory(prologues);
-		
-		for (s32 i = 0; i < parallelism_level_y; ++i)
-			for (s32 j = 0; j < parallelism_level_x; ++j)
-				dealloc_memory(*(last_prologue_contributions + i * parallelism_level_x + j));
-		dealloc_memory(last_prologue_contributions);
-
 		// Calculate Incomplete Epilogues
-		r32** epilogues = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
-		r32** last_epilogue_contributions = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
-		
 		calculate_incomplete_epilogues(image_result,
 			&image_information,
 			epilogues,
@@ -380,7 +437,9 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 			vertical_domain_transforms,
 			rf_table,
 			i,
-			number_of_threads);
+			number_of_threads,
+			incomplete_epilogue_thread_informations,
+			active_threads_memory);
 		
 		// Calculate Complete Epilogues
 		calculate_complete_epilogues(&image_information,
@@ -402,23 +461,11 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 			rf_table,
 			i,
 			number_of_threads,
-			image_result);
+			image_result,
+			block_epilogue_thread_informations,
+			active_threads_memory);
 		
-		// Dealloc memory
-		for (s32 i = 0; i < parallelism_level_y; ++i)
-			for (s32 j = 0; j < parallelism_level_x; ++j)
-				dealloc_memory(*(epilogues + i * parallelism_level_x + j));
-		dealloc_memory(epilogues);
-		
-		for (s32 i = 0; i < parallelism_level_y; ++i)
-			for (s32 j = 0; j < parallelism_level_x; ++j)
-				dealloc_memory(*(last_epilogue_contributions + i * parallelism_level_x + j));
-		dealloc_memory(last_epilogue_contributions);
-		
-		//// Calculate Incomplete ProloguesT
-		r32** prologuesT = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
-		r32** last_prologueT_contributions = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
-		
+		// Calculate Incomplete ProloguesT
 		calculate_incomplete_prologuesT(image_result,
 			&image_information,
 			prologuesT,
@@ -429,7 +476,9 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 			horizontal_domain_transforms,
 			rf_table,
 			i,
-			number_of_threads);
+			number_of_threads,
+			incomplete_prologueT_thread_informations,
+			active_threads_memory);
 		
 		// Calculate Complete ProloguesT
 		calculate_complete_prologuesT(&image_information,
@@ -451,23 +500,11 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 			rf_table,
 			i,
 			number_of_threads,
-			image_result);
-		
-		// Dealloc memory
-		for (s32 i = 0; i < parallelism_level_y; ++i)
-			for (s32 j = 0; j < parallelism_level_x; ++j)
-				dealloc_memory(*(prologuesT + i * parallelism_level_x + j));
-		dealloc_memory(prologuesT);
-		
-		for (s32 i = 0; i < parallelism_level_y; ++i)
-			for (s32 j = 0; j < parallelism_level_x; ++j)
-				dealloc_memory(*(last_prologueT_contributions + i * parallelism_level_x + j));
-		dealloc_memory(last_prologueT_contributions);
+			image_result,
+			block_prologueT_thread_informations,
+			active_threads_memory);
 		
 		// Calculate Incomplete EpiloguesT
-		r32** epiloguesT = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
-		r32** last_epilogueT_contributions = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
-		
 		calculate_incomplete_epiloguesT(image_result,
 			&image_information,
 			epiloguesT,
@@ -478,7 +515,9 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 			horizontal_domain_transforms,
 			rf_table,
 			i,
-			number_of_threads);
+			number_of_threads,
+			incomplete_epilogueT_thread_informations,
+			active_threads_memory);
 		
 		// Calculate Complete EpiloguesT
 		calculate_complete_epiloguesT(&image_information,
@@ -500,29 +539,67 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 			rf_table,
 			i,
 			number_of_threads,
-			image_result);
-		
-		// Dealloc memory
-		for (s32 i = 0; i < parallelism_level_y; ++i)
-			for (s32 j = 0; j < parallelism_level_x; ++j)
-				dealloc_memory(*(epiloguesT + i * parallelism_level_x + j));
-		dealloc_memory(epiloguesT);
-		
-		for (s32 i = 0; i < parallelism_level_y; ++i)
-			for (s32 j = 0; j < parallelism_level_x; ++j)
-				dealloc_memory(*(last_epilogueT_contributions + i * parallelism_level_x + j));
-		dealloc_memory(last_epilogueT_contributions);
+			image_result,
+			block_epilogueT_thread_informations,
+			active_threads_memory);
 	}
 	
+#if 0
+	// Dealloc memory
+	for (s32 i = 0; i < parallelism_level_y; ++i)
+		for (s32 j = 0; j < parallelism_level_x; ++j)
+			dealloc_arena_memory(prologues[i * parallelism_level_x + j]);
+	dealloc_arena_memory(prologues);
+
+	for (s32 i = 0; i < parallelism_level_y; ++i)
+		for (s32 j = 0; j < parallelism_level_x; ++j)
+			dealloc_arena_memory(last_prologue_contributions[i * parallelism_level_x + j]);
+	dealloc_arena_memory(last_prologue_contributions);
+
+	// Dealloc memory
+	for (s32 i = 0; i < parallelism_level_y; ++i)
+		for (s32 j = 0; j < parallelism_level_x; ++j)
+			dealloc_arena_memory(epilogues[i * parallelism_level_x + j]);
+	dealloc_arena_memory(epilogues);
+
+	for (s32 i = 0; i < parallelism_level_y; ++i)
+		for (s32 j = 0; j < parallelism_level_x; ++j)
+			dealloc_arena_memory(last_epilogue_contributions[i * parallelism_level_x + j]);
+	dealloc_arena_memory(last_epilogue_contributions);
+
+	// Dealloc memory
+	for (s32 i = 0; i < parallelism_level_y; ++i)
+		for (s32 j = 0; j < parallelism_level_x; ++j)
+			dealloc_arena_memory(prologuesT[i * parallelism_level_x + j]);
+	dealloc_arena_memory(prologuesT);
+
+	for (s32 i = 0; i < parallelism_level_y; ++i)
+		for (s32 j = 0; j < parallelism_level_x; ++j)
+			dealloc_arena_memory(last_prologueT_contributions[i * parallelism_level_x + j]);
+	dealloc_arena_memory(last_prologueT_contributions);
+
+	// Dealloc memory
+	for (s32 i = 0; i < parallelism_level_y; ++i)
+		for (s32 j = 0; j < parallelism_level_x; ++j)
+			dealloc_arena_memory(epiloguesT[i * parallelism_level_x + j]);
+	dealloc_arena_memory(epiloguesT);
+
+	for (s32 i = 0; i < parallelism_level_y; ++i)
+		for (s32 j = 0; j < parallelism_level_x; ++j)
+			dealloc_arena_memory(last_epilogueT_contributions[i * parallelism_level_x + j]);
+	dealloc_arena_memory(last_epilogueT_contributions);
 
 	// Dealloc memory
 	for (s32 i = 0; i < num_iterations; ++i)
-		dealloc_memory(rf_table[i]);
-	dealloc_memory(rf_table);
+		dealloc_arena_memory(rf_table[i]);
+	dealloc_arena_memory(rf_table);
 
-	dealloc_memory(image_blocks);
-	dealloc_memory(vertical_domain_transforms);
-	dealloc_memory(horizontal_domain_transforms);
+	dealloc_arena_memory(image_blocks);
+	dealloc_arena_memory(vertical_domain_transforms);
+	dealloc_arena_memory(horizontal_domain_transforms);
+#endif
+
+	dealloc_arena_memory();
 
 	return 0;
 }

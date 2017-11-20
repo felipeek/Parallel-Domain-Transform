@@ -7,7 +7,7 @@
 #include "Util.h"
 #include "ParallelDomainTransform.h"
 
-#define DEFAULT_IMAGE_PATH ".\\res\\chosen.png"
+#define DEFAULT_IMAGE_PATH ".\\res\\img.jpg"
 #define DEFAULT_SPATIAL_FACTOR 500.0f
 #define DEFAULT_RANGE_FACTOR 50.0f
 #define DEFAULT_NUM_ITERATIONS 4
@@ -38,13 +38,13 @@ intern r32* load_image(const s8* image_path,
 	{
 		for (s32 j = 0; j < *image_width; ++j)
 		{
-			*(image_data + i * *image_width * *image_channels + j * *image_channels) =
-				*(auxiliary_data + i * *image_width * *image_channels + j * *image_channels) / 255.0f;
-			*(image_data + i * *image_width * *image_channels + j * *image_channels + 1) =
-				*(auxiliary_data + i * *image_width * *image_channels + j * *image_channels + 1) / 255.0f;
-			*(image_data + i * *image_width * *image_channels + j * *image_channels + 2) =
-				*(auxiliary_data + i * *image_width * *image_channels + j * *image_channels + 2) / 255.0f;
-			*(image_data + i * *image_width * *image_channels + j * *image_channels + 3) = 1.0f;
+			image_data[i * *image_width * *image_channels + j * *image_channels] =
+				auxiliary_data[i * *image_width * *image_channels + j * *image_channels] / 255.0f;
+			image_data[i * *image_width * *image_channels + j * *image_channels + 1] =
+				auxiliary_data[i * *image_width * *image_channels + j * *image_channels + 1] / 255.0f;
+			image_data[i * *image_width * *image_channels + j * *image_channels + 2] =
+				auxiliary_data[i * *image_width * *image_channels + j * *image_channels + 2] / 255.0f;
+			image_data[i * *image_width * *image_channels + j * *image_channels + 3] = 1.0f;
 		}
 	}
 
@@ -65,10 +65,10 @@ intern void store_image(const s8* result_path,
 	{
 		for (s32 j = 0; j < image_width; ++j)
 		{
-			*(auxiliary_data + i * image_width * image_channels + j * image_channels) = (u8)r32_round(255.0f * *(image_bytes + i * image_width * image_channels + j * image_channels));
-			*(auxiliary_data + i * image_width * image_channels + j * image_channels + 1) = (u8)r32_round(255.0f * *(image_bytes + i * image_width * image_channels + j * image_channels + 1));
-			*(auxiliary_data + i * image_width * image_channels + j * image_channels + 2) = (u8)r32_round(255.0f * *(image_bytes + i * image_width * image_channels + j * image_channels + 2));
-			*(auxiliary_data + i * image_width * image_channels + j * image_channels + 3) = 255;
+			auxiliary_data[i * image_width * image_channels + j * image_channels] = (u8)r32_round(255.0f * image_bytes[i * image_width * image_channels + j * image_channels]);
+			auxiliary_data[i * image_width * image_channels + j * image_channels + 1] = (u8)r32_round(255.0f * image_bytes[i * image_width * image_channels + j * image_channels + 1]);
+			auxiliary_data[i * image_width * image_channels + j * image_channels + 2] = (u8)r32_round(255.0f * image_bytes[i * image_width * image_channels + j * image_channels + 2]);
+			auxiliary_data[i * image_width * image_channels + j * image_channels + 3] = 255;
 		}
 	}
 

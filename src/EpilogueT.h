@@ -41,7 +41,9 @@ extern void calculate_incomplete_epiloguesT(const r32* image_bytes,
 	s32* vertical_domain_transforms,
 	r32** rf_table,
 	s32 iteration,
-	s32 number_of_threads);
+	s32 number_of_threads,
+	Thread_Incomplete_EpilogueT_Information* thread_informations_memory,
+	void** active_threads_memory);
 
 extern void calculate_blocks_from_epiloguesT(const r32* image_bytes,
 	Image_Information* image_information,
@@ -53,7 +55,9 @@ extern void calculate_blocks_from_epiloguesT(const r32* image_bytes,
 	r32** rf_table,
 	s32 iteration,
 	s32 number_of_threads,
-	r32* image_result);
+	r32* image_result,
+	Thread_Block_EpilogueT_Information* thread_informations_memory,
+	void** active_threads_memory);
 
 extern void calculate_complete_epiloguesT(Image_Information* image_information,
 	r32** complete_epiloguesT,

@@ -1,15 +1,20 @@
+#define HO_ARENA_IMPLEMENT
 #include "Util.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <memory_arena.h>
 
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
+#define ARENA_SIZE 1073741824
 clock_t aux;
+Memory_Arena arena;
+s32 arena_valid = 0;
 
 extern void print(const char *fmt, ...)
 {
@@ -46,6 +51,28 @@ extern void* alloc_memory(const s32 size)
 extern void dealloc_memory(void* ptr)
 {
 	return free(ptr);
+}
+
+extern void* alloc_arena_memory(const s32 size)
+{
+	if (!arena_valid)
+	{
+		arena_create(&arena, ARENA_SIZE);
+		arena_valid = 1;
+	}
+
+	return arena_alloc(&arena, size);
+}
+
+extern void dealloc_arena_memory()
+{
+	arena_release(&arena);
+}
+
+extern void dealloc_all_memory()
+{
+	arena_release(&arena);
+	arena_valid = 0;
 }
 
 extern void* create_thread(THREAD_FUNCTION function, void* parameters)

@@ -65,5 +65,11 @@
     <ClInclude Include="src\EpilogueT.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\memory_arena.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dynamic_array.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

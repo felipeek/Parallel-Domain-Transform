@@ -41,7 +41,9 @@ extern void calculate_incomplete_prologuesT(const r32* image_bytes,
 	s32* horizontal_domain_transforms,
 	r32** rf_table,
 	s32 iteration,
-	s32 number_of_threads);
+	s32 number_of_threads,
+	Thread_Incomplete_PrologueT_Information* thread_informations_memory,
+	void** active_threads_memory);
 
 extern void calculate_blocks_from_prologuesT(const r32* image_bytes,
 	Image_Information* image_information,
@@ -53,7 +55,9 @@ extern void calculate_blocks_from_prologuesT(const r32* image_bytes,
 	r32** rf_table,
 	s32 iteration,
 	s32 number_of_threads,
-	r32* image_result);
+	r32* image_result,
+	Thread_Block_PrologueT_Information* thread_informations_memory,
+	void** active_threads_memory);
 
 extern void calculate_complete_prologuesT(Image_Information* image_information,
 	r32** complete_prologuesT,

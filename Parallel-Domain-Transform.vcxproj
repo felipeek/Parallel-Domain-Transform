@@ -29,6 +29,8 @@
     <ClCompile Include="src\Util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\dynamic_array.h" />
+    <ClInclude Include="include\memory_arena.h" />
     <ClInclude Include="include\stb_image.h" />
     <ClInclude Include="include\stb_image_write.h" />
     <ClInclude Include="src\Epilogue.h" />
