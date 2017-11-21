@@ -1,4 +1,5 @@
 #define HO_ARENA_IMPLEMENT
+#define _CRT_SECURE_NO_WARNINGS
 #include "Util.h"
 #include <stdio.h>
 #include <stdarg.h>
@@ -141,5 +142,5 @@ extern r32 end_clock()
 	auto end = std::chrono::system_clock::now();
 	std::chrono::duration<double> diff = end - aux;
 
-	return diff.count();
+	return (r32)diff.count();
 }
