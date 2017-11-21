@@ -54,7 +54,6 @@ HO_EXTERN void HO_API array_release(void* array_)
 HO_EXTERN void HO_API array_remove(void* array_, size_t index)
 {
 	array* base = (array*)((char*)array_ - sizeof(array));
-	size_t capacity = base->capacity;
 	size_t length = base->length;
 	size_t size_element = base->size_element;
 
@@ -112,7 +111,6 @@ HO_EXTERN size_t HO_API _array_emplace(void** array_)
 		*array_ = (char*)new_mem + sizeof(array);
 	}
 
-	void* dst = (char*)*array_ + length * size_element;
 	base->length++;
 
 	return length;

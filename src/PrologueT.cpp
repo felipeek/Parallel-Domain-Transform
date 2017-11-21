@@ -1,5 +1,4 @@
 #include "PrologueT.h"
-#include "Util.h"
 
 extern void calculate_complete_prologuesT(Image_Information* image_information,
 	r32** complete_prologuesT,
@@ -46,7 +45,7 @@ extern void calculate_complete_prologuesT(Image_Information* image_information,
 	}
 }
 
-intern s32 _stdcall fill_blocks_from_prologuesT_thread_proc(void* thread_information)
+intern Thread_Proc_Return_Type _stdcall fill_blocks_from_prologuesT_thread_proc(void* thread_information)
 {
 	Thread_Block_PrologueT_Information* block_information = (Thread_Block_PrologueT_Information*)thread_information;
 
@@ -104,7 +103,7 @@ extern void calculate_blocks_from_prologuesT(const r32* image_bytes,
 	s32 number_of_threads,
 	r32* image_result,
 	Thread_Block_PrologueT_Information* thread_informations_memory,
-	void** active_threads_memory)
+	Thread_Handler* active_threads_memory)
 {
 	// Fill Thread Informations
 	for (s32 i = 0; i < parallelism_level_y; ++i)
@@ -146,7 +145,7 @@ extern void calculate_blocks_from_prologuesT(const r32* image_bytes,
 	join_threads(num_active_threads, active_threads_memory, 1);
 }
 
-intern s32 _stdcall fill_incomplete_prologuesT_thread_proc(void* thread_information)
+intern Thread_Proc_Return_Type _stdcall fill_incomplete_prologuesT_thread_proc(void* thread_information)
 {
 	Thread_Incomplete_PrologueT_Information* prologueT_information = (Thread_Incomplete_PrologueT_Information*)thread_information;
 
@@ -195,7 +194,7 @@ extern void calculate_incomplete_prologuesT(const r32* image_bytes,
 	s32 iteration,
 	s32 number_of_threads,
 	Thread_Incomplete_PrologueT_Information* thread_informations_memory,
-	void** active_threads_memory)
+	Thread_Handler* active_threads_memory)
 {
 	// Fill Thread Informations
 	for (s32 i = 0; i < parallelism_level_y; ++i)

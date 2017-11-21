@@ -27,7 +27,7 @@ struct Struct_Thread_DT_Information
 	OUT s32* horizontal_domain_transforms;
 };
 
-intern s32 _stdcall fill_block_domain_transforms_thread_proc(void* thread_dt_information)
+intern Thread_Proc_Return_Type _stdcall fill_block_domain_transforms_thread_proc(void* thread_dt_information)
 {
 	Thread_DT_Information* vdt_information = (Thread_DT_Information*)thread_dt_information;
 	R32_Color last_pixel;
@@ -145,7 +145,7 @@ intern void fill_domain_transforms(s32* vertical_domain_transforms,
 	s32 parallelism_level_y,
 	const Block* image_blocks,
 	Thread_DT_Information* thread_informations_memory,
-	void** active_threads_memory)
+	Thread_Handler* active_threads_memory)
 {
 	// Fill DT Informations
 	for (s32 i = 0; i < parallelism_level_y; ++i)
@@ -179,7 +179,7 @@ intern void fill_domain_transforms(s32* vertical_domain_transforms,
 	join_threads(num_active_threads, active_threads_memory, 1);
 }
 
-intern void paint_block(r32* img_data,
+/*intern void paint_block(r32* img_data,
 	Image_Information* img,
 	const Block* b,
 	const R32_Color* c)
@@ -193,7 +193,7 @@ intern void paint_block(r32* img_data,
 			img_data[i * img->width * img->channels + j * img->channels + 2] = c->b;
 		}
 	}
-}
+}*/
 
 extern s32 parallel_domain_transform(const r32* image_bytes,
 	s32 image_width,
@@ -250,7 +250,7 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 		rf_table[i] = (r32*)alloc_arena_memory(sizeof(r32) * RF_TABLE_SIZE);
 	s32* vertical_domain_transforms = (s32*)alloc_arena_memory(sizeof(s32) * image_height * image_width);
 	s32* horizontal_domain_transforms = (s32*)alloc_arena_memory(sizeof(s32) * image_height * image_width);
-	void** active_threads_memory = (void**)alloc_arena_memory(sizeof(void*) * number_of_threads);
+	Thread_Handler* active_threads_memory = (Thread_Handler*)alloc_arena_memory(sizeof(Thread_Handler) * number_of_threads);
 	Thread_DT_Information* threads_informations_memory = (Thread_DT_Information*)alloc_arena_memory(sizeof(Thread_DT_Information) * parallelism_level_x * parallelism_level_y);
 	Thread_Incomplete_Prologue_Information* incomplete_prologue_thread_informations = (Thread_Incomplete_Prologue_Information*)alloc_arena_memory(sizeof(Thread_Incomplete_Prologue_Information)
 		* parallelism_level_x * parallelism_level_y);

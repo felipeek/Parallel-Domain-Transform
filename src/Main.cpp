@@ -7,7 +7,7 @@
 #include "Util.h"
 #include "ParallelDomainTransform.h"
 
-#define DEFAULT_IMAGE_PATH ".\\res\\img.jpg"
+#define DEFAULT_IMAGE_PATH "./res/img.jpg"
 #define DEFAULT_SPATIAL_FACTOR 500.0f
 #define DEFAULT_RANGE_FACTOR 50.0f
 #define DEFAULT_NUM_ITERATIONS 4
@@ -15,7 +15,7 @@
 #define DEFAULT_PARALLELISM_LEVEL_Y 16
 #define DEFAULT_NUMBER_OF_THREADS 1
 #define DEFAULT_COLLECT_TIME 1
-#define DEFAULT_RESULT_PATH ".\\res\\output.png"
+#define DEFAULT_RESULT_PATH "./res/output.png"
 #define DEFAULT_IMAGE_CHANNELS 4
 
 intern r32* load_image(const s8* image_path,
@@ -71,7 +71,7 @@ intern void store_image(const s8* result_path,
 			auxiliary_data[i * image_width * image_channels + j * image_channels + 3] = 255;
 		}
 	}
-
+	
 	stbi_write_png(result_path, image_width, image_height, image_channels, auxiliary_data, image_width * image_channels);
 	dealloc_memory(auxiliary_data);
 }
@@ -94,7 +94,10 @@ intern void print_help_message(const s8* exe_name)
 
 extern s32 main(s32 argc, s8** argv)
 {
-	s8* image_path = DEFAULT_IMAGE_PATH;
+	s8 default_image_path[] = DEFAULT_IMAGE_PATH;
+	s8 default_result_path[] = DEFAULT_RESULT_PATH;
+	
+	s8* image_path = 0;
 	r32 spatial_factor = DEFAULT_SPATIAL_FACTOR;
 	r32 range_factor = DEFAULT_RANGE_FACTOR;
 	s32 num_iterations = DEFAULT_NUM_ITERATIONS;
@@ -102,8 +105,8 @@ extern s32 main(s32 argc, s8** argv)
 	s32 parallelism_level_y = DEFAULT_PARALLELISM_LEVEL_Y;
 	s32 number_of_threads = DEFAULT_NUMBER_OF_THREADS;
 	s32 collect_time = DEFAULT_COLLECT_TIME;
-	s8* result_path = DEFAULT_RESULT_PATH;
-
+	s8* result_path = 0;
+	
 	if (argc % 2 != 0)
 	{
 		for (s32 i = 1; i < argc; i += 2)
@@ -174,7 +177,10 @@ extern s32 main(s32 argc, s8** argv)
 	r32* image_bytes;
 	r32* image_result;
 
-	image_bytes = load_image(image_path, &image_width, &image_height, &image_channels, DEFAULT_IMAGE_CHANNELS);
+	if (image_path)
+		image_bytes = load_image(image_path, &image_width, &image_height, &image_channels, DEFAULT_IMAGE_CHANNELS);
+	else
+		image_bytes = load_image(default_image_path, &image_width, &image_height, &image_channels, DEFAULT_IMAGE_CHANNELS);
 
 	if (!image_bytes)
 	{
@@ -202,8 +208,11 @@ extern s32 main(s32 argc, s8** argv)
 	if (collect_time)
 		print("Total time: %.3f seconds\n", total_time);
 
-	store_image(result_path, image_width, image_height, image_channels, image_result);
-
+	if (result_path)
+		store_image(result_path, image_width, image_height, image_channels, image_result);
+	else
+		store_image(default_result_path, image_width, image_height, image_channels, image_result);
+	
 	dealloc_memory(image_bytes);
 	dealloc_memory(image_result);
 

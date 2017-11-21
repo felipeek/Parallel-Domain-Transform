@@ -84,8 +84,6 @@ void arena_align_to(Memory_Arena* arena, size_t n) {
 		arena->blocks[index].current_pointer = arena->blocks[index].memory;
 		arena->blocks[index].size_used = 0;
 	}
-	size_t aligned = (size_t)arena->blocks[arena->current_block].current_pointer;
-	assert(aligned % n == 0);
 }
 
 void* arena_alloc(Memory_Arena* arena, size_t bytes) {

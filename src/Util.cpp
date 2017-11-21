@@ -6,13 +6,18 @@
 #include <math.h>
 #include <time.h>
 #include <memory_arena.h>
+#include <iostream>
+#include <chrono>
+#include <string.h>
 
 #ifdef _WIN32
 #include <windows.h>
+#elif defined(__linux__)
+#include <pthread.h>
 #endif
 
 #define ARENA_SIZE 1073741824
-clock_t aux;
+std::chrono::time_point<std::chrono::system_clock> aux;
 Memory_Arena arena;
 s32 arena_valid = 0;
 
@@ -43,6 +48,11 @@ extern s32 str_to_s32(const s8* str)
 	return atoi(str);
 }
 
+extern void str_copy(s8* dst, s8* src)
+{
+	strcpy(dst, src);
+}
+
 extern void* alloc_memory(const s32 size)
 {
 	return malloc(size);
@@ -69,28 +79,26 @@ extern void dealloc_arena_memory()
 	arena_release(&arena);
 }
 
-extern void dealloc_all_memory()
-{
-	arena_release(&arena);
-	arena_valid = 0;
-}
-
-extern void* create_thread(THREAD_FUNCTION function, void* parameters)
+extern Thread_Handler create_thread(THREAD_FUNCTION function, void* parameters)
 {
 #ifdef _WIN32
 	return CreateThread(0, 0, (LPTHREAD_START_ROUTINE)function, parameters, 0, 0);
-#else
-	return 0;
+#elif defined(__linux__)
+	pthread_t thread;
+	pthread_create(&thread, 0, function, parameters);
+	return thread;
 #endif
 }
 
-extern s32 join_threads(s32 number_of_threads, void** threads_array, s32 wait_all)
+extern s32 join_threads(s32 number_of_threads, Thread_Handler* threads_array, s32 wait_all)
 {
 #ifdef _WIN32
 	return WaitForMultipleObjects(number_of_threads, threads_array, wait_all, INFINITE);
-#else
-	return -1;
+#elif defined(__linux__)
+	for (s32 i = 0; i < number_of_threads; ++i)
+		pthread_join(threads_array[i], 0);
 #endif
+	return 0;
 }
 
 extern r32 absolute(r32 x)
@@ -125,11 +133,13 @@ extern void* copy_memory(void* destination, const void* source, s32 num)
 
 extern void start_clock()
 {
-	aux = clock();
+	aux = std::chrono::system_clock::now();
 }
 
 extern r32 end_clock()
 {
-	clock_t end = clock();
-	return (r32)(end - aux) / CLOCKS_PER_SEC;
+	auto end = std::chrono::system_clock::now();
+	std::chrono::duration<double> diff = end - aux;
+
+	return diff.count();
 }
