@@ -1,5 +1,4 @@
 #pragma once
-#define intern static
 
 typedef char s8;
 typedef short s16;
@@ -37,3 +36,5 @@ struct Struct_Image_Information
 	s32 height;
 	s32 channels;
 };
+
+#undef internal

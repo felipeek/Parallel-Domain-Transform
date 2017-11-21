@@ -27,7 +27,7 @@ struct Struct_Thread_DT_Information
 	OUT s32* horizontal_domain_transforms;
 };
 
-intern Thread_Proc_Return_Type _stdcall fill_block_domain_transforms_thread_proc(void* thread_dt_information)
+static Thread_Proc_Return_Type _stdcall fill_block_domain_transforms_thread_proc(void* thread_dt_information)
 {
 	Thread_DT_Information* vdt_information = (Thread_DT_Information*)thread_dt_information;
 	R32_Color last_pixel;
@@ -134,7 +134,7 @@ intern Thread_Proc_Return_Type _stdcall fill_block_domain_transforms_thread_proc
 	return 0;
 }
 
-intern void fill_domain_transforms(s32* vertical_domain_transforms,
+static void fill_domain_transforms(s32* vertical_domain_transforms,
 	s32* horizontal_domain_transforms,
 	const r32* image_bytes,
 	const Image_Information* image_information,
@@ -179,7 +179,7 @@ intern void fill_domain_transforms(s32* vertical_domain_transforms,
 	join_threads(num_active_threads, active_threads_memory, 1);
 }
 
-/*intern void paint_block(r32* img_data,
+/*static void paint_block(r32* img_data,
 	Image_Information* img,
 	const Block* b,
 	const R32_Color* c)

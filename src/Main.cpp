@@ -18,7 +18,7 @@
 #define DEFAULT_RESULT_PATH "./res/output.png"
 #define DEFAULT_IMAGE_CHANNELS 4
 
-intern r32* load_image(const s8* image_path,
+static r32* load_image(const s8* image_path,
 	s32* image_width,
 	s32* image_height,
 	s32* image_channels,
@@ -29,7 +29,7 @@ intern r32* load_image(const s8* image_path,
 	if (auxiliary_data == 0)
 		return 0;
 
-	// @TODO: check WHY this is happing
+	// @TODO: check WHY this is happening
 	*image_channels = 4;
 
 	r32* image_data = (r32*)alloc_memory(sizeof(r32) * *image_height * *image_width * *image_channels);
@@ -53,7 +53,7 @@ intern r32* load_image(const s8* image_path,
 	return image_data;
 }
 
-intern void store_image(const s8* result_path,
+static void store_image(const s8* result_path,
 	s32 image_width,
 	s32 image_height,
 	s32 image_channels,
@@ -76,7 +76,7 @@ intern void store_image(const s8* result_path,
 	dealloc_memory(auxiliary_data);
 }
 
-intern void print_help_message(const s8* exe_name)
+static void print_help_message(const s8* exe_name)
 {
 	print("Usage: %s\n\n", exe_name);
 	print("Optional Parameters:\n");

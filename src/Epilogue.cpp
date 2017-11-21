@@ -45,7 +45,7 @@ extern void calculate_complete_epilogues(Image_Information* image_information,
 	}
 }
 
-intern Thread_Proc_Return_Type _stdcall fill_blocks_from_epilogues_thread_proc(void* thread_information)
+static Thread_Proc_Return_Type _stdcall fill_blocks_from_epilogues_thread_proc(void* thread_information)
 {
 	Thread_Block_Epilogue_Information* block_information = (Thread_Block_Epilogue_Information*)thread_information;
 
@@ -146,7 +146,7 @@ extern void calculate_blocks_from_epilogues(const r32* image_bytes,
 	join_threads(num_active_threads, active_threads_memory, 1);
 }
 
-intern Thread_Proc_Return_Type _stdcall fill_incomplete_epilogues_thread_proc(void* thread_information)
+static Thread_Proc_Return_Type _stdcall fill_incomplete_epilogues_thread_proc(void* thread_information)
 {
 	Thread_Incomplete_Epilogue_Information* epilogue_information = (Thread_Incomplete_Epilogue_Information*)thread_information;
 

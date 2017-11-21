@@ -45,7 +45,7 @@ extern void calculate_complete_prologues(Image_Information* image_information,
 	}
 }
 
-intern Thread_Proc_Return_Type _stdcall fill_blocks_from_prologues_thread_proc(void* thread_information)
+static Thread_Proc_Return_Type _stdcall fill_blocks_from_prologues_thread_proc(void* thread_information)
 {
 	Thread_Block_Prologue_Information* block_information = (Thread_Block_Prologue_Information*)thread_information;
 
@@ -145,7 +145,7 @@ extern void calculate_blocks_from_prologues(const r32* image_bytes,
 	join_threads(num_active_threads, active_threads_memory, 1);
 }
 
-intern Thread_Proc_Return_Type _stdcall fill_incomplete_prologues_thread_proc(void* thread_information)
+static Thread_Proc_Return_Type _stdcall fill_incomplete_prologues_thread_proc(void* thread_information)
 {
 	Thread_Incomplete_Prologue_Information* prologue_information = (Thread_Incomplete_Prologue_Information*)thread_information;
 
