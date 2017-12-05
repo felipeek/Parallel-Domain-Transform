@@ -8,12 +8,13 @@
 #include "ParallelDomainTransform.h"
 
 #define DEFAULT_IMAGE_PATH "./res/img.jpg"
-#define DEFAULT_SPATIAL_FACTOR 500.0f
-#define DEFAULT_RANGE_FACTOR 50.0f
+#define DEFAULT_SCRIBBLES_PATH "./res/scribbles.png"
+#define DEFAULT_SPATIAL_FACTOR 100.0f
+#define DEFAULT_RANGE_FACTOR 5.0f
 #define DEFAULT_NUM_ITERATIONS 4
-#define DEFAULT_PARALLELISM_LEVEL_X 16
-#define DEFAULT_PARALLELISM_LEVEL_Y 16
-#define DEFAULT_NUMBER_OF_THREADS 1
+#define DEFAULT_PARALLELISM_LEVEL_X 2
+#define DEFAULT_PARALLELISM_LEVEL_Y 2
+#define DEFAULT_NUMBER_OF_THREADS 4
 #define DEFAULT_COLLECT_TIME 1
 #define DEFAULT_RESULT_PATH "./res/output.png"
 #define DEFAULT_IMAGE_CHANNELS 4
@@ -76,11 +77,45 @@ static void store_image(const s8* result_path,
 	dealloc_memory(auxiliary_data);
 }
 
+static r32* generate_scribbles_mask(const r32* scribbles_bytes,
+	s32 scribbles_width,
+	s32 scribbles_height,
+	s32 scribbles_channels)
+{
+	r32* mask = (r32*)alloc_memory(scribbles_width * scribbles_height * scribbles_channels * sizeof(r32));
+
+	for (s32 i = 0; i < scribbles_height; ++i)
+		for (s32 j = 0; j < scribbles_width; ++j)
+		{
+			r32 r = scribbles_bytes[i * scribbles_width * scribbles_channels + j * scribbles_channels];
+			r32 g = scribbles_bytes[i * scribbles_width * scribbles_channels + j * scribbles_channels + 1];
+			r32 b = scribbles_bytes[i * scribbles_width * scribbles_channels + j * scribbles_channels + 2];
+
+			if (r != 0.0f || g != 0.0f || b != 0.0f)
+			{
+				mask[i * scribbles_width * scribbles_channels + j * scribbles_channels] = 1.0f;
+				mask[i * scribbles_width * scribbles_channels + j * scribbles_channels + 1] = 1.0f;
+				mask[i * scribbles_width * scribbles_channels + j * scribbles_channels + 2] = 1.0f;
+				mask[i * scribbles_width * scribbles_channels + j * scribbles_channels + 3] = 1.0f;
+			}
+			else
+			{
+				mask[i * scribbles_width * scribbles_channels + j * scribbles_channels] = 0.0f;
+				mask[i * scribbles_width * scribbles_channels + j * scribbles_channels + 1] = 0.0f;
+				mask[i * scribbles_width * scribbles_channels + j * scribbles_channels + 2] = 0.0f;
+				mask[i * scribbles_width * scribbles_channels + j * scribbles_channels + 3] = 1.0f;
+			}
+		}
+
+	return mask;
+}
+
 static void print_help_message(const s8* exe_name)
 {
 	print("Usage: %s\n\n", exe_name);
 	print("Optional Parameters:\n");
 	print("\tImage Path: -p <string>\n");
+	print("\tScribbles Path: -z <string>\n");
 	print("\tSpatial Factor: -s <r32>\n");
 	print("\tRange Factor: -r <r32>\n");
 	print("\tNumber of Iterations: -i <s32>\n");
@@ -96,8 +131,10 @@ extern s32 main(s32 argc, s8** argv)
 {
 	s8 default_image_path[] = DEFAULT_IMAGE_PATH;
 	s8 default_result_path[] = DEFAULT_RESULT_PATH;
-	
+	s8 default_scribbles_path[] = DEFAULT_SCRIBBLES_PATH;
+
 	s8* image_path = 0;
+	s8* scribbles_path = 0;
 	r32 spatial_factor = DEFAULT_SPATIAL_FACTOR;
 	r32 range_factor = DEFAULT_RANGE_FACTOR;
 	s32 num_iterations = DEFAULT_NUM_ITERATIONS;
@@ -106,7 +143,7 @@ extern s32 main(s32 argc, s8** argv)
 	s32 number_of_threads = DEFAULT_NUMBER_OF_THREADS;
 	s32 collect_time = DEFAULT_COLLECT_TIME;
 	s8* result_path = 0;
-	
+
 	if (argc % 2 != 0)
 	{
 		for (s32 i = 1; i < argc; i += 2)
@@ -115,31 +152,35 @@ extern s32 main(s32 argc, s8** argv)
 			{
 				switch (argv[i][1])
 				{
-				// Image Path
+					// Image Path
 				case 'p': {
 					image_path = argv[i + 1];
 				} break;
-				// Spatial Factor
+					// Scribbles Path
+				case 'z': {
+					scribbles_path = argv[i + 1];
+				} break;
+					// Spatial Factor
 				case 's': {
 					spatial_factor = str_to_r32(argv[i + 1]);
 				} break;
-				// Range Factor
+					// Range Factor
 				case 'r': {
 					range_factor = str_to_r32(argv[i + 1]);
 				} break;
-				// Number of Iterations
+					// Number of Iterations
 				case 'i': {
 					num_iterations = str_to_s32(argv[i + 1]);
 				} break;
-				// Parallelism Level X
+					// Parallelism Level X
 				case 'x': {
 					parallelism_level_x = str_to_s32(argv[i + 1]);
 				} break;
-				// Parallelism Level Y
+					// Parallelism Level Y
 				case 'y': {
 					parallelism_level_y = str_to_s32(argv[i + 1]);
 				} break;
-				// Number of Threads
+					// Number of Threads
 				case 't': {
 					number_of_threads = str_to_s32(argv[i + 1]);
 					if (number_of_threads > 64)
@@ -149,15 +190,15 @@ extern s32 main(s32 argc, s8** argv)
 						number_of_threads = 64;
 					}
 				} break;
-				// Collect Time
+					// Collect Time
 				case 'c': {
 					collect_time = str_to_s32(argv[i + 1]);
 				} break;
-				// Result Path
+					// Result Path
 				case 'o': {
 					result_path = argv[i + 1];
 				} break;
-				// Help
+					// Help
 				case 'h':
 				default: {
 					print_help_message(argv[0]);
@@ -188,19 +229,42 @@ extern s32 main(s32 argc, s8** argv)
 		return -1;
 	}
 
+	s32 scribbles_width, scribbles_height, scribbles_channels;
+	r32* scribbles_bytes;
+	r32* scribbles_result;
+
+	if (scribbles_path)
+		scribbles_bytes = load_image(scribbles_path, &scribbles_width, &scribbles_height, &scribbles_channels, DEFAULT_IMAGE_CHANNELS);
+	else
+		scribbles_bytes = load_image(default_scribbles_path, &scribbles_width, &scribbles_height, &scribbles_channels, DEFAULT_IMAGE_CHANNELS);
+
+	if (!scribbles_bytes)
+	{
+		print("Error: Could not scribbles image %s\n", scribbles_path);
+		return -1;
+	}
+
+	if (scribbles_width != image_width || scribbles_height != image_height)
+	{
+		print("Error: Image and scribbels must have same size.\n");
+		return -1;
+	}
+
+	r32* mask_bytes = generate_scribbles_mask(scribbles_bytes, scribbles_width, scribbles_height, scribbles_channels);
+
 	image_result = (r32*)alloc_memory(sizeof(r32) * image_width * image_height * image_channels);
 
 	start_clock();
 
-	s32 domain_transform_error_code = parallel_domain_transform(image_bytes, image_width, image_height, image_channels, spatial_factor, range_factor,
+	s32 colorization_error_code = parallel_colorization(image_bytes, scribbles_bytes, mask_bytes, image_width, image_height, image_channels, spatial_factor, range_factor,
 		num_iterations, number_of_threads, parallelism_level_x, parallelism_level_y, image_result);
 
 	r32 total_time = end_clock();
 
-	switch (domain_transform_error_code)
+	switch (colorization_error_code)
 	{
 	case -1: {
-		print("Error: Domain Transform Failed (Unknown Reason).\n");
+		print("Error: Colorization Failed (Unknown Reason).\n");
 		return -1;
 	} break;
 	}
@@ -214,6 +278,7 @@ extern s32 main(s32 argc, s8** argv)
 		store_image(default_result_path, image_width, image_height, image_channels, image_result);
 	
 	dealloc_memory(image_bytes);
+	dealloc_memory(mask_bytes);
 	dealloc_memory(image_result);
 
 	return 0;

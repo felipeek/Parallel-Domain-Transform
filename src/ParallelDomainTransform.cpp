@@ -195,7 +195,9 @@ static void fill_domain_transforms(s32* vertical_domain_transforms,
 	}
 }*/
 
-extern s32 parallel_domain_transform(const r32* image_bytes,
+extern s32 parallel_colorization(const r32* image_bytes,
+	const r32* scribbles_bytes,
+	const r32* mask_bytes,
 	s32 image_width,
 	s32 image_height,
 	s32 image_channels,
@@ -207,7 +209,9 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 	s32 parallelism_level_y,
 	r32* image_result)
 {
-	/* CRETE BLOCKS */
+	//memcpy(image_result, image_bytes, image_width * image_height * image_channels * sizeof(r32));
+
+	/* CREATE BLOCKS */
 	Block* image_blocks = (Block*)alloc_arena_memory(sizeof(Block) * parallelism_level_x * parallelism_level_y);
 
 	Image_Information image_information;
@@ -276,6 +280,7 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 	r32** last_prologueT_contributions = (r32**)alloc_arena_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
 	r32** epiloguesT = (r32**)alloc_arena_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
 	r32** last_epilogueT_contributions = (r32**)alloc_arena_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
+	r32* mask_result = (r32*)alloc_arena_memory(sizeof(r32) * image_width * image_height * image_channels);	// auxiliary memory to store mask result
 
 	for (s32 i = 0; i < parallelism_level_y; ++i)
 		for (s32 j = 0; j < parallelism_level_x; ++j)
@@ -328,7 +333,7 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 
 	// Pre-calculate RF table
 	r32 d;
-	
+
 	for (s32 i = 0; i < num_iterations; ++i)
 	{
 		for (s32 j = 0; j < RF_TABLE_SIZE; ++j)
@@ -352,13 +357,13 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 		threads_informations_memory,
 		active_threads_memory);
 
-	// Filter Iterations
+	// Filter Iterations (for scribbles)
 	for (s32 i = 0; i < num_iterations; ++i)
 	{
 		// Calculate Incomplete Prologues
-		// if first iteration, send image_bytes.
+		// if first iteration, send scribbles_bytes.
 		if (i == 0)
-			calculate_incomplete_prologues(image_bytes,
+			calculate_incomplete_prologues(scribbles_bytes,
 				&image_information,
 				prologues,
 				last_prologue_contributions,
@@ -385,7 +390,7 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 				number_of_threads,
 				incomplete_prologue_thread_informations,
 				active_threads_memory);
-		
+
 		// Calculate Complete Prologues
 		calculate_complete_prologues(&image_information,
 			prologues,
@@ -394,11 +399,11 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 			image_blocks,
 			parallelism_level_x,
 			parallelism_level_y);
-		
+
 		// Calculate Full Blocks From Prologues
-		// if first iteration, send image_bytes.
+		// if first iteration, send scribbles_bytes.
 		if (i == 0)
-			calculate_blocks_from_prologues(image_bytes,
+			calculate_blocks_from_prologues(scribbles_bytes,
 				&image_information,
 				prologues,
 				parallelism_level_x,
@@ -425,7 +430,7 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 				image_result,
 				block_prologue_thread_informations,
 				active_threads_memory);
-		
+
 		// Calculate Incomplete Epilogues
 		calculate_incomplete_epilogues(image_result,
 			&image_information,
@@ -440,7 +445,7 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 			number_of_threads,
 			incomplete_epilogue_thread_informations,
 			active_threads_memory);
-		
+
 		// Calculate Complete Epilogues
 		calculate_complete_epilogues(&image_information,
 			epilogues,
@@ -449,7 +454,7 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 			image_blocks,
 			parallelism_level_x,
 			parallelism_level_y);
-		
+
 		// Calculate Full Blocks From Epilogues
 		calculate_blocks_from_epilogues(image_result,
 			&image_information,
@@ -464,7 +469,7 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 			image_result,
 			block_epilogue_thread_informations,
 			active_threads_memory);
-		
+
 		// Calculate Incomplete ProloguesT
 		calculate_incomplete_prologuesT(image_result,
 			&image_information,
@@ -479,7 +484,7 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 			number_of_threads,
 			incomplete_prologueT_thread_informations,
 			active_threads_memory);
-		
+
 		// Calculate Complete ProloguesT
 		calculate_complete_prologuesT(&image_information,
 			prologuesT,
@@ -488,7 +493,7 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 			image_blocks,
 			parallelism_level_x,
 			parallelism_level_y);
-		
+
 		// Calculate Full Blocks From ProloguesT
 		calculate_blocks_from_prologuesT(image_result,
 			&image_information,
@@ -503,7 +508,7 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 			image_result,
 			block_prologueT_thread_informations,
 			active_threads_memory);
-		
+
 		// Calculate Incomplete EpiloguesT
 		calculate_incomplete_epiloguesT(image_result,
 			&image_information,
@@ -518,7 +523,7 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 			number_of_threads,
 			incomplete_epilogueT_thread_informations,
 			active_threads_memory);
-		
+
 		// Calculate Complete EpiloguesT
 		calculate_complete_epiloguesT(&image_information,
 			epiloguesT,
@@ -527,7 +532,7 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 			image_blocks,
 			parallelism_level_x,
 			parallelism_level_y);
-		
+
 		// Calculate Full Blocks From EpiloguesT
 		calculate_blocks_from_epiloguesT(image_result,
 			&image_information,
@@ -543,7 +548,235 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 			block_epilogueT_thread_informations,
 			active_threads_memory);
 	}
-	
+
+	// Filter Iterations (for mask)
+	for (s32 i = 0; i < num_iterations; ++i)
+	{
+		// Calculate Incomplete Prologues
+		// if first iteration, send mask_bytes.
+		if (i == 0)
+			calculate_incomplete_prologues(mask_bytes,
+				&image_information,
+				prologues,
+				last_prologue_contributions,
+				parallelism_level_x,
+				parallelism_level_y,
+				image_blocks,
+				vertical_domain_transforms,
+				rf_table,
+				i,
+				number_of_threads,
+				incomplete_prologue_thread_informations,
+				active_threads_memory);
+		else
+			calculate_incomplete_prologues(mask_result,
+				&image_information,
+				prologues,
+				last_prologue_contributions,
+				parallelism_level_x,
+				parallelism_level_y,
+				image_blocks,
+				vertical_domain_transforms,
+				rf_table,
+				i,
+				number_of_threads,
+				incomplete_prologue_thread_informations,
+				active_threads_memory);
+
+		// Calculate Complete Prologues
+		calculate_complete_prologues(&image_information,
+			prologues,
+			prologues,
+			last_prologue_contributions,
+			image_blocks,
+			parallelism_level_x,
+			parallelism_level_y);
+
+		// Calculate Full Blocks From Prologues
+		// if first iteration, send mask_bytes.
+		if (i == 0)
+			calculate_blocks_from_prologues(mask_bytes,
+				&image_information,
+				prologues,
+				parallelism_level_x,
+				parallelism_level_y,
+				image_blocks,
+				vertical_domain_transforms,
+				rf_table,
+				i,
+				number_of_threads,
+				mask_result,
+				block_prologue_thread_informations,
+				active_threads_memory);
+		else
+			calculate_blocks_from_prologues(mask_result,
+				&image_information,
+				prologues,
+				parallelism_level_x,
+				parallelism_level_y,
+				image_blocks,
+				vertical_domain_transforms,
+				rf_table,
+				i,
+				number_of_threads,
+				mask_result,
+				block_prologue_thread_informations,
+				active_threads_memory);
+
+		// Calculate Incomplete Epilogues
+		calculate_incomplete_epilogues(mask_result,
+			&image_information,
+			epilogues,
+			last_epilogue_contributions,
+			parallelism_level_x,
+			parallelism_level_y,
+			image_blocks,
+			vertical_domain_transforms,
+			rf_table,
+			i,
+			number_of_threads,
+			incomplete_epilogue_thread_informations,
+			active_threads_memory);
+
+		// Calculate Complete Epilogues
+		calculate_complete_epilogues(&image_information,
+			epilogues,
+			epilogues,
+			last_epilogue_contributions,
+			image_blocks,
+			parallelism_level_x,
+			parallelism_level_y);
+
+		// Calculate Full Blocks From Epilogues
+		calculate_blocks_from_epilogues(mask_result,
+			&image_information,
+			epilogues,
+			parallelism_level_x,
+			parallelism_level_y,
+			image_blocks,
+			vertical_domain_transforms,
+			rf_table,
+			i,
+			number_of_threads,
+			mask_result,
+			block_epilogue_thread_informations,
+			active_threads_memory);
+
+		// Calculate Incomplete ProloguesT
+		calculate_incomplete_prologuesT(mask_result,
+			&image_information,
+			prologuesT,
+			last_prologueT_contributions,
+			parallelism_level_x,
+			parallelism_level_y,
+			image_blocks,
+			horizontal_domain_transforms,
+			rf_table,
+			i,
+			number_of_threads,
+			incomplete_prologueT_thread_informations,
+			active_threads_memory);
+
+		// Calculate Complete ProloguesT
+		calculate_complete_prologuesT(&image_information,
+			prologuesT,
+			prologuesT,
+			last_prologueT_contributions,
+			image_blocks,
+			parallelism_level_x,
+			parallelism_level_y);
+
+		// Calculate Full Blocks From ProloguesT
+		calculate_blocks_from_prologuesT(mask_result,
+			&image_information,
+			prologuesT,
+			parallelism_level_x,
+			parallelism_level_y,
+			image_blocks,
+			horizontal_domain_transforms,
+			rf_table,
+			i,
+			number_of_threads,
+			mask_result,
+			block_prologueT_thread_informations,
+			active_threads_memory);
+
+		// Calculate Incomplete EpiloguesT
+		calculate_incomplete_epiloguesT(mask_result,
+			&image_information,
+			epiloguesT,
+			last_epilogueT_contributions,
+			parallelism_level_x,
+			parallelism_level_y,
+			image_blocks,
+			horizontal_domain_transforms,
+			rf_table,
+			i,
+			number_of_threads,
+			incomplete_epilogueT_thread_informations,
+			active_threads_memory);
+
+		// Calculate Complete EpiloguesT
+		calculate_complete_epiloguesT(&image_information,
+			epiloguesT,
+			epiloguesT,
+			last_epilogueT_contributions,
+			image_blocks,
+			parallelism_level_x,
+			parallelism_level_y);
+
+		// Calculate Full Blocks From EpiloguesT
+		calculate_blocks_from_epiloguesT(mask_result,
+			&image_information,
+			epiloguesT,
+			parallelism_level_x,
+			parallelism_level_y,
+			image_blocks,
+			horizontal_domain_transforms,
+			rf_table,
+			i,
+			number_of_threads,
+			mask_result,
+			block_epilogueT_thread_informations,
+			active_threads_memory);
+	}
+
+	// Scribble Result and Mask Result are ready!
+	for (s32 i = 0; i < image_height; ++i)
+		for (s32 j = 0; j < image_width; ++j)
+		{
+			if (mask_result[i * image_width * image_channels + j * image_channels] != 0.0f)
+			{
+				image_result[i * image_width * image_channels + j * image_channels] = image_result[i * image_width * image_channels + j * image_channels] /
+					mask_result[i * image_width * image_channels + j * image_channels];
+			}
+			else
+			{
+				image_result[i * image_width * image_channels + j * image_channels] = 0.0f;
+			}
+
+			if (mask_result[i * image_width * image_channels + j * image_channels + 1] != 0.0f)
+			{
+				image_result[i * image_width * image_channels + j * image_channels + 1] = image_result[i * image_width * image_channels + j * image_channels + 1] /
+					mask_result[i * image_width * image_channels + j * image_channels + 1];
+			}
+			else
+			{
+				image_result[i * image_width * image_channels + j * image_channels + 1] = 0.0f;
+			}
+
+			if (mask_result[i * image_width * image_channels + j * image_channels + 2] != 0.0f)
+			{
+				image_result[i * image_width * image_channels + j * image_channels + 2] = image_result[i * image_width * image_channels + j * image_channels + 2] /
+					mask_result[i * image_width * image_channels + j * image_channels + 2];
+			}
+			else
+			{
+				image_result[i * image_width * image_channels + j * image_channels + 2] = 0.0f;
+			}
+		}
+
+
 #if 0
 	// Dealloc memory
 	for (s32 i = 0; i < parallelism_level_y; ++i)
@@ -597,9 +830,13 @@ extern s32 parallel_domain_transform(const r32* image_bytes,
 	dealloc_arena_memory(image_blocks);
 	dealloc_arena_memory(vertical_domain_transforms);
 	dealloc_arena_memory(horizontal_domain_transforms);
+	
+	dealloc_arena_memory(mask_result);
 #endif
 
 	dealloc_arena_memory();
+
+	return 0;
 
 	return 0;
 }
