@@ -27,6 +27,46 @@ struct Struct_Thread_DT_Information
 	OUT s32* horizontal_domain_transforms;
 };
 
+void image_rgb_to_yuv(const r32* image_bytes, s32 image_width, s32 image_height, s32 image_channels, r32* output)
+{
+	for (s32 i = 0; i < image_height; ++i)
+		for (s32 j = 0; j < image_width; ++j)
+		{
+			r32 r = image_bytes[i * image_width * image_channels + j * image_channels];
+			r32 g = image_bytes[i * image_width * image_channels + j * image_channels + 1];
+			r32 b = image_bytes[i * image_width * image_channels + j * image_channels + 2];
+
+			r32 y = 0.299f * r + 0.587f * g + 0.114f * b;
+			r32 u = -0.14713f * r - 0.28886f * g + 0.436f * b;
+			r32 v = 0.615f * r - 0.51499f * g - 0.10001f * b;
+
+			output[i * image_width * image_channels + j * image_channels] = y;
+			output[i * image_width * image_channels + j * image_channels + 1] = u;
+			output[i * image_width * image_channels + j * image_channels + 2] = v;
+			if (image_channels >= 4) output[i * image_width * image_channels + j * image_channels + 3] = 1.0f;
+		}
+}
+
+void image_yuv_to_rgb(const r32* image_bytes, s32 image_width, s32 image_height, s32 image_channels, r32* output)
+{
+	for (s32 i = 0; i < image_height; ++i)
+		for (s32 j = 0; j < image_width; ++j)
+		{
+			r32 y = image_bytes[i * image_width * image_channels + j * image_channels];
+			r32 u = image_bytes[i * image_width * image_channels + j * image_channels + 1];
+			r32 v = image_bytes[i * image_width * image_channels + j * image_channels + 2];
+			
+			r32 r = r32_clamp(1.0f * y + 0.0f * u + 1.13983f * v, 0.0f, 1.0f);
+			r32 g = r32_clamp(1.0f * y - 0.39465f * u - 0.58060f * v, 0.0f, 1.0f);
+			r32 b = r32_clamp(1.0f * y + 2.03211f * u + 0.0f * v, 0.0f, 1.0f);
+
+			output[i * image_width * image_channels + j * image_channels] = r;
+			output[i * image_width * image_channels + j * image_channels + 1] = g;
+			output[i * image_width * image_channels + j * image_channels + 2] = b;
+			if (image_channels >= 4) output[i * image_width * image_channels + j * image_channels + 3] = 1.0f;
+		}
+}
+
 static Thread_Proc_Return_Type _stdcall fill_block_domain_transforms_thread_proc(void* thread_dt_information)
 {
 	Thread_DT_Information* vdt_information = (Thread_DT_Information*)thread_dt_information;
@@ -745,37 +785,38 @@ extern s32 parallel_colorization(const r32* image_bytes,
 	for (s32 i = 0; i < image_height; ++i)
 		for (s32 j = 0; j < image_width; ++j)
 		{
-			if (mask_result[i * image_width * image_channels + j * image_channels] != 0.0f)
+			if (mask_result[i * image_width * image_channels + j * image_channels] == 0.0f)
+			{
+				image_result[i * image_width * image_channels + j * image_channels] = 0.0f;
+				image_result[i * image_width * image_channels + j * image_channels + 1] = 0.0f;
+				image_result[i * image_width * image_channels + j * image_channels + 2] = 0.0f;
+			}
+			else
 			{
 				image_result[i * image_width * image_channels + j * image_channels] = image_result[i * image_width * image_channels + j * image_channels] /
 					mask_result[i * image_width * image_channels + j * image_channels];
-			}
-			else
-			{
-				image_result[i * image_width * image_channels + j * image_channels] = 0.0f;
-			}
 
-			if (mask_result[i * image_width * image_channels + j * image_channels + 1] != 0.0f)
-			{
 				image_result[i * image_width * image_channels + j * image_channels + 1] = image_result[i * image_width * image_channels + j * image_channels + 1] /
 					mask_result[i * image_width * image_channels + j * image_channels + 1];
-			}
-			else
-			{
-				image_result[i * image_width * image_channels + j * image_channels + 1] = 0.0f;
-			}
 
-			if (mask_result[i * image_width * image_channels + j * image_channels + 2] != 0.0f)
-			{
 				image_result[i * image_width * image_channels + j * image_channels + 2] = image_result[i * image_width * image_channels + j * image_channels + 2] /
 					mask_result[i * image_width * image_channels + j * image_channels + 2];
 			}
-			else
-			{
-				image_result[i * image_width * image_channels + j * image_channels + 2] = 0.0f;
-			}
 		}
 
+	// YUV Conversion
+	image_rgb_to_yuv(image_result, image_width, image_height, image_channels, image_result);
+	image_rgb_to_yuv(image_bytes, image_width, image_height, image_channels, mask_result);	// Uses mask_result to store memory.
+
+	// Replace Y channel
+	for (s32 i = 0; i < image_height; ++i)
+		for (s32 j = 0; j < image_width; ++j)
+		{
+			image_result[i * image_width * image_channels + j * image_channels] = mask_result[i * image_width * image_channels + j * image_channels];
+		}
+
+	// RGB Conversion
+	image_yuv_to_rgb(image_result, image_width, image_height, image_channels, image_result);
 
 #if 0
 	// Dealloc memory

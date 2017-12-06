@@ -29,6 +29,7 @@ extern r32 r32_pow(r32 b, r32 e);
 extern r32 r32_sqrt(r32 v);
 extern r32 r32_exp(r32 v);
 extern s32 r32_round(r32 value);
+extern r32 r32_clamp(r32 value, r32 min, r32 max);
 extern void* copy_memory(void* destination, const void* source, s32 num);
 extern void start_clock();
 extern r32 end_clock();

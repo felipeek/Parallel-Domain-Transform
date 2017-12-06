@@ -127,6 +127,13 @@ extern s32 r32_round(r32 value)
 	return (s32)round(value);
 }
 
+extern r32 r32_clamp(r32 value, r32 min, r32 max)
+{
+	if (value < min) return min;
+	if (value > max) return max;
+	return value;
+}
+
 extern void* copy_memory(void* destination, const void* source, s32 num)
 {
 	return memcpy(destination, source, num);
