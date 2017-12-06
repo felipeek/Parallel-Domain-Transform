@@ -62,6 +62,17 @@ static Thread_Proc_Return_Type _stdcall fill_blocks_from_prologuesT_thread_proc(
 				block_information->last_prologuesT[count * block_information->image_information->channels + 2],
 			};
 		}
+		else
+		{
+			last_pixel = {
+				block_information->image_bytes[j * block_information->image_information->width *
+					block_information->image_information->channels + block_information->block->x * block_information->image_information->channels],
+				block_information->image_bytes[j * block_information->image_information->width *
+					block_information->image_information->channels + block_information->block->x * block_information->image_information->channels + 1],
+				block_information->image_bytes[j * block_information->image_information->width *
+					block_information->image_information->channels + block_information->block->x * block_information->image_information->channels + 2],
+			};
+		}
 
 		for (s32 i = block_information->block->x; i < block_information->block->x + block_information->block->width; ++i)
 		{
