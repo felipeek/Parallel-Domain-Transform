@@ -19,6 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Controller.cpp" />
+    <ClCompile Include="src\Graphics.cpp" />
+    <ClCompile Include="src\Mathematics.cpp" />
+    <ClCompile Include="src\UI.cpp" />
+    <ClCompile Include="include\glad.c" />
     <ClCompile Include="src\Common.h" />
     <ClCompile Include="src\Epilogue.cpp" />
     <ClCompile Include="src\EpilogueT.cpp" />
@@ -26,10 +31,17 @@
     <ClCompile Include="src\ParallelDomainTransform.cpp" />
     <ClCompile Include="src\Prologue.cpp" />
     <ClCompile Include="src\PrologueT.cpp" />
+    <ClCompile Include="src\OS.cpp" />
     <ClCompile Include="src\Util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Controller.h" />
+    <ClInclude Include="src\Graphics.h" />
+    <ClInclude Include="src\Mathematics.h" />
+    <ClInclude Include="src\UI.h" />
     <ClInclude Include="include\dynamic_array.h" />
+    <ClInclude Include="include\glad.h" />
+    <ClInclude Include="include\khrplatform.h" />
     <ClInclude Include="include\memory_arena.h" />
     <ClInclude Include="include\stb_image.h" />
     <ClInclude Include="include\stb_image_write.h" />
@@ -38,7 +50,12 @@
     <ClInclude Include="src\ParallelDomainTransform.h" />
     <ClInclude Include="src\Prologue.h" />
     <ClInclude Include="src\PrologueT.h" />
+    <ClInclude Include="src\OS.h" />
     <ClInclude Include="src\Util.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\QuadShader.fs" />
+    <None Include="shaders\QuadShader.vs" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -50,13 +67,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -112,6 +129,7 @@
     <Link>
       <AdditionalLibraryDirectories>lib\</AdditionalLibraryDirectories>
       <Profile>true</Profile>
+      <AdditionalDependencies>opengl32.lib;kernel32.lib;user32.lib;gdi32.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
