@@ -252,7 +252,7 @@ extern s32 parallel_colorization(const r32* image_bytes,
 	//memcpy(image_result, image_bytes, image_width * image_height * image_channels * sizeof(r32));
 
 	/* CREATE BLOCKS */
-	Block* image_blocks = (Block*)alloc_arena_memory(sizeof(Block) * parallelism_level_x * parallelism_level_y);
+	Block* image_blocks = (Block*)alloc_memory(sizeof(Block) * parallelism_level_x * parallelism_level_y);
 
 	Image_Information image_information;
 
@@ -288,73 +288,73 @@ extern s32 parallel_colorization(const r32* image_bytes,
 
 	/* PRE-ALLOC MEMORY */
 
-	r32* rf_coefficients = (r32*)alloc_arena_memory(sizeof(r32) * num_iterations);
-	r32** rf_table = (r32**)alloc_arena_memory(sizeof(r32*) * num_iterations);
+	r32* rf_coefficients = (r32*)alloc_memory(sizeof(r32) * num_iterations);
+	r32** rf_table = (r32**)alloc_memory(sizeof(r32*) * num_iterations);
 	for (s32 i = 0; i < num_iterations; ++i)
-		rf_table[i] = (r32*)alloc_arena_memory(sizeof(r32) * RF_TABLE_SIZE);
-	s32* vertical_domain_transforms = (s32*)alloc_arena_memory(sizeof(s32) * image_height * image_width);
-	s32* horizontal_domain_transforms = (s32*)alloc_arena_memory(sizeof(s32) * image_height * image_width);
-	Thread_Handler* active_threads_memory = (Thread_Handler*)alloc_arena_memory(sizeof(Thread_Handler) * number_of_threads);
-	Thread_DT_Information* threads_informations_memory = (Thread_DT_Information*)alloc_arena_memory(sizeof(Thread_DT_Information) * parallelism_level_x * parallelism_level_y);
-	Thread_Incomplete_Prologue_Information* incomplete_prologue_thread_informations = (Thread_Incomplete_Prologue_Information*)alloc_arena_memory(sizeof(Thread_Incomplete_Prologue_Information)
+		rf_table[i] = (r32*)alloc_memory(sizeof(r32) * RF_TABLE_SIZE);
+	s32* vertical_domain_transforms = (s32*)alloc_memory(sizeof(s32) * image_height * image_width);
+	s32* horizontal_domain_transforms = (s32*)alloc_memory(sizeof(s32) * image_height * image_width);
+	Thread_Handler* active_threads_memory = (Thread_Handler*)alloc_memory(sizeof(Thread_Handler) * number_of_threads);
+	Thread_DT_Information* threads_informations_memory = (Thread_DT_Information*)alloc_memory(sizeof(Thread_DT_Information) * parallelism_level_x * parallelism_level_y);
+	Thread_Incomplete_Prologue_Information* incomplete_prologue_thread_informations = (Thread_Incomplete_Prologue_Information*)alloc_memory(sizeof(Thread_Incomplete_Prologue_Information)
 		* parallelism_level_x * parallelism_level_y);
-	Thread_Block_Prologue_Information* block_prologue_thread_informations = (Thread_Block_Prologue_Information*)alloc_arena_memory(sizeof(Thread_Block_Prologue_Information)
+	Thread_Block_Prologue_Information* block_prologue_thread_informations = (Thread_Block_Prologue_Information*)alloc_memory(sizeof(Thread_Block_Prologue_Information)
 		* parallelism_level_x * parallelism_level_y);
-	Thread_Block_Epilogue_Information* block_epilogue_thread_informations = (Thread_Block_Epilogue_Information*)alloc_arena_memory(sizeof(Thread_Block_Epilogue_Information)
+	Thread_Block_Epilogue_Information* block_epilogue_thread_informations = (Thread_Block_Epilogue_Information*)alloc_memory(sizeof(Thread_Block_Epilogue_Information)
 		* parallelism_level_x * parallelism_level_y);
-	Thread_Incomplete_Epilogue_Information* incomplete_epilogue_thread_informations = (Thread_Incomplete_Epilogue_Information*)alloc_arena_memory(sizeof(Thread_Incomplete_Epilogue_Information)
+	Thread_Incomplete_Epilogue_Information* incomplete_epilogue_thread_informations = (Thread_Incomplete_Epilogue_Information*)alloc_memory(sizeof(Thread_Incomplete_Epilogue_Information)
 		* parallelism_level_x * parallelism_level_y);
-	Thread_Incomplete_PrologueT_Information* incomplete_prologueT_thread_informations = (Thread_Incomplete_PrologueT_Information*)alloc_arena_memory(sizeof(Thread_Incomplete_PrologueT_Information)
+	Thread_Incomplete_PrologueT_Information* incomplete_prologueT_thread_informations = (Thread_Incomplete_PrologueT_Information*)alloc_memory(sizeof(Thread_Incomplete_PrologueT_Information)
 		* parallelism_level_x * parallelism_level_y);
-	Thread_Block_PrologueT_Information* block_prologueT_thread_informations = (Thread_Block_PrologueT_Information*)alloc_arena_memory(sizeof(Thread_Block_PrologueT_Information)
+	Thread_Block_PrologueT_Information* block_prologueT_thread_informations = (Thread_Block_PrologueT_Information*)alloc_memory(sizeof(Thread_Block_PrologueT_Information)
 		* parallelism_level_x * parallelism_level_y);
-	Thread_Block_EpilogueT_Information* block_epilogueT_thread_informations = (Thread_Block_EpilogueT_Information*)alloc_arena_memory(sizeof(Thread_Block_EpilogueT_Information)
+	Thread_Block_EpilogueT_Information* block_epilogueT_thread_informations = (Thread_Block_EpilogueT_Information*)alloc_memory(sizeof(Thread_Block_EpilogueT_Information)
 		* parallelism_level_x * parallelism_level_y);
-	Thread_Incomplete_EpilogueT_Information* incomplete_epilogueT_thread_informations = (Thread_Incomplete_EpilogueT_Information*)alloc_arena_memory(sizeof(Thread_Incomplete_EpilogueT_Information)
+	Thread_Incomplete_EpilogueT_Information* incomplete_epilogueT_thread_informations = (Thread_Incomplete_EpilogueT_Information*)alloc_memory(sizeof(Thread_Incomplete_EpilogueT_Information)
 		* parallelism_level_x * parallelism_level_y);
-	r32** prologues = (r32**)alloc_arena_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
-	r32** last_prologue_contributions = (r32**)alloc_arena_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
-	r32** epilogues = (r32**)alloc_arena_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
-	r32** last_epilogue_contributions = (r32**)alloc_arena_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
-	r32** prologuesT = (r32**)alloc_arena_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
-	r32** last_prologueT_contributions = (r32**)alloc_arena_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
-	r32** epiloguesT = (r32**)alloc_arena_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
-	r32** last_epilogueT_contributions = (r32**)alloc_arena_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
-	r32* mask_result = (r32*)alloc_arena_memory(sizeof(r32) * image_width * image_height * image_channels);	// auxiliary memory to store mask result
+	r32** prologues = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
+	r32** last_prologue_contributions = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
+	r32** epilogues = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
+	r32** last_epilogue_contributions = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
+	r32** prologuesT = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
+	r32** last_prologueT_contributions = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
+	r32** epiloguesT = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
+	r32** last_epilogueT_contributions = (r32**)alloc_memory(sizeof(r32*) * parallelism_level_x * parallelism_level_y);
+	r32* mask_result = (r32*)alloc_memory(sizeof(r32) * image_width * image_height * image_channels);	// auxiliary memory to store mask result
 
 	for (s32 i = 0; i < parallelism_level_y; ++i)
 		for (s32 j = 0; j < parallelism_level_x; ++j)
 		{
-			prologuesT[i * parallelism_level_x + j] = (r32*)alloc_arena_memory(sizeof(r32)
+			prologuesT[i * parallelism_level_x + j] = (r32*)alloc_memory(sizeof(r32)
 				* image_blocks[i * parallelism_level_x + j].height * image_channels);
-			last_prologueT_contributions[i * parallelism_level_x + j] = (r32*)alloc_arena_memory(sizeof(r32)
-				* image_blocks[i * parallelism_level_x + j].height * image_channels);
-		}
-
-	for (s32 i = 0; i < parallelism_level_y; ++i)
-		for (s32 j = 0; j < parallelism_level_x; ++j)
-		{
-			epiloguesT[i * parallelism_level_x + j] = (r32*)alloc_arena_memory(sizeof(r32)
-				* image_blocks[i * parallelism_level_x + j].height * image_channels);
-			last_epilogueT_contributions[i * parallelism_level_x + j] = (r32*)alloc_arena_memory(sizeof(r32)
+			last_prologueT_contributions[i * parallelism_level_x + j] = (r32*)alloc_memory(sizeof(r32)
 				* image_blocks[i * parallelism_level_x + j].height * image_channels);
 		}
 
 	for (s32 i = 0; i < parallelism_level_y; ++i)
 		for (s32 j = 0; j < parallelism_level_x; ++j)
 		{
-			prologues[i * parallelism_level_x + j] = (r32*)alloc_arena_memory(sizeof(r32)
+			epiloguesT[i * parallelism_level_x + j] = (r32*)alloc_memory(sizeof(r32)
+				* image_blocks[i * parallelism_level_x + j].height * image_channels);
+			last_epilogueT_contributions[i * parallelism_level_x + j] = (r32*)alloc_memory(sizeof(r32)
+				* image_blocks[i * parallelism_level_x + j].height * image_channels);
+		}
+
+	for (s32 i = 0; i < parallelism_level_y; ++i)
+		for (s32 j = 0; j < parallelism_level_x; ++j)
+		{
+			prologues[i * parallelism_level_x + j] = (r32*)alloc_memory(sizeof(r32)
 				* image_blocks[i * parallelism_level_x + j].width * image_channels);
-			last_prologue_contributions[i * parallelism_level_x + j] = (r32*)alloc_arena_memory(sizeof(r32)
+			last_prologue_contributions[i * parallelism_level_x + j] = (r32*)alloc_memory(sizeof(r32)
 				* image_blocks[i * parallelism_level_x + j].width * image_channels);
 		}
 
 	for (s32 i = 0; i < parallelism_level_y; ++i)
 		for (s32 j = 0; j < parallelism_level_x; ++j)
 		{
-			epilogues[i * parallelism_level_x + j] = (r32*)alloc_arena_memory(sizeof(r32)
+			epilogues[i * parallelism_level_x + j] = (r32*)alloc_memory(sizeof(r32)
 				* image_blocks[i * parallelism_level_x + j].width * image_channels);
-			last_epilogue_contributions[i * parallelism_level_x + j] = (r32*)alloc_arena_memory(sizeof(r32)
+			last_epilogue_contributions[i * parallelism_level_x + j] = (r32*)alloc_memory(sizeof(r32)
 				* image_blocks[i * parallelism_level_x + j].width * image_channels);
 		}
 
@@ -818,64 +818,64 @@ extern s32 parallel_colorization(const r32* image_bytes,
 	// RGB Conversion
 	image_yuv_to_rgb(image_result, image_width, image_height, image_channels, image_result);
 
-#if 0
-	// Dealloc memory
-	for (s32 i = 0; i < parallelism_level_y; ++i)
-		for (s32 j = 0; j < parallelism_level_x; ++j)
-			dealloc_arena_memory(prologues[i * parallelism_level_x + j]);
-	dealloc_arena_memory(prologues);
-
-	for (s32 i = 0; i < parallelism_level_y; ++i)
-		for (s32 j = 0; j < parallelism_level_x; ++j)
-			dealloc_arena_memory(last_prologue_contributions[i * parallelism_level_x + j]);
-	dealloc_arena_memory(last_prologue_contributions);
 
 	// Dealloc memory
 	for (s32 i = 0; i < parallelism_level_y; ++i)
 		for (s32 j = 0; j < parallelism_level_x; ++j)
-			dealloc_arena_memory(epilogues[i * parallelism_level_x + j]);
-	dealloc_arena_memory(epilogues);
+			dealloc_memory(prologues[i * parallelism_level_x + j]);
+	dealloc_memory(prologues);
 
 	for (s32 i = 0; i < parallelism_level_y; ++i)
 		for (s32 j = 0; j < parallelism_level_x; ++j)
-			dealloc_arena_memory(last_epilogue_contributions[i * parallelism_level_x + j]);
-	dealloc_arena_memory(last_epilogue_contributions);
-
-	// Dealloc memory
-	for (s32 i = 0; i < parallelism_level_y; ++i)
-		for (s32 j = 0; j < parallelism_level_x; ++j)
-			dealloc_arena_memory(prologuesT[i * parallelism_level_x + j]);
-	dealloc_arena_memory(prologuesT);
-
-	for (s32 i = 0; i < parallelism_level_y; ++i)
-		for (s32 j = 0; j < parallelism_level_x; ++j)
-			dealloc_arena_memory(last_prologueT_contributions[i * parallelism_level_x + j]);
-	dealloc_arena_memory(last_prologueT_contributions);
+			dealloc_memory(last_prologue_contributions[i * parallelism_level_x + j]);
+	dealloc_memory(last_prologue_contributions);
 
 	// Dealloc memory
 	for (s32 i = 0; i < parallelism_level_y; ++i)
 		for (s32 j = 0; j < parallelism_level_x; ++j)
-			dealloc_arena_memory(epiloguesT[i * parallelism_level_x + j]);
-	dealloc_arena_memory(epiloguesT);
+			dealloc_memory(epilogues[i * parallelism_level_x + j]);
+	dealloc_memory(epilogues);
 
 	for (s32 i = 0; i < parallelism_level_y; ++i)
 		for (s32 j = 0; j < parallelism_level_x; ++j)
-			dealloc_arena_memory(last_epilogueT_contributions[i * parallelism_level_x + j]);
-	dealloc_arena_memory(last_epilogueT_contributions);
+			dealloc_memory(last_epilogue_contributions[i * parallelism_level_x + j]);
+	dealloc_memory(last_epilogue_contributions);
+
+	// Dealloc memory
+	for (s32 i = 0; i < parallelism_level_y; ++i)
+		for (s32 j = 0; j < parallelism_level_x; ++j)
+			dealloc_memory(prologuesT[i * parallelism_level_x + j]);
+	dealloc_memory(prologuesT);
+
+	for (s32 i = 0; i < parallelism_level_y; ++i)
+		for (s32 j = 0; j < parallelism_level_x; ++j)
+			dealloc_memory(last_prologueT_contributions[i * parallelism_level_x + j]);
+	dealloc_memory(last_prologueT_contributions);
+
+	// Dealloc memory
+	for (s32 i = 0; i < parallelism_level_y; ++i)
+		for (s32 j = 0; j < parallelism_level_x; ++j)
+			dealloc_memory(epiloguesT[i * parallelism_level_x + j]);
+	dealloc_memory(epiloguesT);
+
+	for (s32 i = 0; i < parallelism_level_y; ++i)
+		for (s32 j = 0; j < parallelism_level_x; ++j)
+			dealloc_memory(last_epilogueT_contributions[i * parallelism_level_x + j]);
+	dealloc_memory(last_epilogueT_contributions);
 
 	// Dealloc memory
 	for (s32 i = 0; i < num_iterations; ++i)
-		dealloc_arena_memory(rf_table[i]);
-	dealloc_arena_memory(rf_table);
+		dealloc_memory(rf_table[i]);
+	dealloc_memory(rf_table);
 
-	dealloc_arena_memory(image_blocks);
-	dealloc_arena_memory(vertical_domain_transforms);
-	dealloc_arena_memory(horizontal_domain_transforms);
+	dealloc_memory(image_blocks);
+	dealloc_memory(vertical_domain_transforms);
+	dealloc_memory(horizontal_domain_transforms);
 	
-	dealloc_arena_memory(mask_result);
-#endif
+	dealloc_memory(mask_result);
 
-	dealloc_arena_memory();
+
+//	dealloc_arena_memory();
 
 	return 0;
 

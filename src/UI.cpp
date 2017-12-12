@@ -48,10 +48,38 @@ Quad q_paint_cursor;
 
 Quad* q_selected_cursor;
 
-//static void test()
-//{
-//	parallel_colorization(original_image, scribbles, )
-//}
+static r32* generate_scribbles_mask(const r32* scribbles_bytes,
+	s32 scribbles_width,
+	s32 scribbles_height,
+	s32 scribbles_channels)
+{
+	r32* mask = (r32*)alloc_memory(scribbles_width * scribbles_height * scribbles_channels * sizeof(r32));
+
+	for (s32 i = 0; i < scribbles_height; ++i)
+		for (s32 j = 0; j < scribbles_width; ++j)
+		{
+			r32 r = scribbles_bytes[i * scribbles_width * scribbles_channels + j * scribbles_channels];
+			r32 g = scribbles_bytes[i * scribbles_width * scribbles_channels + j * scribbles_channels + 1];
+			r32 b = scribbles_bytes[i * scribbles_width * scribbles_channels + j * scribbles_channels + 2];
+
+			if (r != 0.0f || g != 0.0f || b != 0.0f)
+			{
+				mask[i * scribbles_width * scribbles_channels + j * scribbles_channels] = 1.0f;
+				mask[i * scribbles_width * scribbles_channels + j * scribbles_channels + 1] = 1.0f;
+				mask[i * scribbles_width * scribbles_channels + j * scribbles_channels + 2] = 1.0f;
+				mask[i * scribbles_width * scribbles_channels + j * scribbles_channels + 3] = 1.0f;
+			}
+			else
+			{
+				mask[i * scribbles_width * scribbles_channels + j * scribbles_channels] = 0.0f;
+				mask[i * scribbles_width * scribbles_channels + j * scribbles_channels + 1] = 0.0f;
+				mask[i * scribbles_width * scribbles_channels + j * scribbles_channels + 2] = 0.0f;
+				mask[i * scribbles_width * scribbles_channels + j * scribbles_channels + 3] = 1.0f;
+			}
+		}
+
+	return mask;
+}
 
 static void load_shaders()
 {
@@ -202,6 +230,8 @@ static void update_image_windows(Virtual_Window* vw)
 	}
 	else if (vw == vw_scribbles)
 	{
+		static bool should_run_domain_transform = false;
+
 		q_original_image.position = { vw->drawable_quad.position.x, vw->drawable_quad.position.y, 0.0f, 1.0f };
 		q_original_image.scale = { vw->drawable_quad.scale.x, vw->drawable_quad.scale.y, 0.0f };
 		q_scribbles.position = { vw->drawable_quad.position.x, vw->drawable_quad.position.y, 0.0f, 1.0f };
@@ -215,16 +245,34 @@ static void update_image_windows(Virtual_Window* vw)
 			s32 selected_x_pixel = r32_round(image_x_click * images_width);
 			s32 selected_y_pixel = r32_round(image_y_click * images_height);
 
-			scribbles[selected_y_pixel * images_width * 4 + selected_x_pixel * 4] = q_selected_color.color.x;
-			scribbles[selected_y_pixel * images_width * 4 + selected_x_pixel * 4 + 1] = q_selected_color.color.y;
-			scribbles[selected_y_pixel * images_width * 4 + selected_x_pixel * 4 + 2] = q_selected_color.color.z;
-			scribbles[selected_y_pixel * images_width * 4 + selected_x_pixel * 4 + 3] = 1.0f;
+			const s32 BRUSH_SIZE = 5;
+
+			for (s32 i = selected_y_pixel - BRUSH_SIZE; i < selected_y_pixel + BRUSH_SIZE; ++i)
+				for (s32 j = selected_x_pixel - BRUSH_SIZE; j < selected_x_pixel + BRUSH_SIZE; ++j)
+				{
+					if (i < 0 || i >= images_height || j < 0 || j >= images_width)
+						continue;
+					scribbles[i * images_width * 4 + j * 4] = q_selected_color.color.x;
+					scribbles[i * images_width * 4 + j * 4 + 1] = q_selected_color.color.y;
+					scribbles[i * images_width * 4 + j * 4 + 2] = q_selected_color.color.z;
+					scribbles[i * images_width * 4 + j * 4 + 3] = 1.0f;
+				}
 
 			graphics_update_quad_texture(&q_scribbles, scribbles, images_width, images_height);
 
-			//test();
-
+			should_run_domain_transform = true;
 			//print("image_x_click: %.2f\nimage_y_click: %.2f\n", image_x_click, image_y_click);
+		}
+		else if (should_run_domain_transform)
+		{
+			r32* mask_bytes = generate_scribbles_mask(scribbles, images_width, images_height, 4);
+			start_clock();
+			parallel_colorization(original_image, scribbles, mask_bytes, images_width, images_height, 4, 200, 7, 4, 4, 2, 2, result_image);
+			r32 total_time = end_clock();
+			print("Total time: %.3f seconds\n", total_time);
+			graphics_update_quad_texture(&q_result, result_image, images_width, images_height);
+			dealloc_memory(mask_bytes);
+			should_run_domain_transform = false;
 		}
 	}
 }

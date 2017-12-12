@@ -23,7 +23,7 @@
 #include <pthread.h>
 #endif
 
-#define ARENA_SIZE 1073741824
+#define ARENA_SIZE 1073741824/4
 std::chrono::time_point<std::chrono::system_clock> aux;
 Memory_Arena arena;
 s32 arena_valid = 0;
@@ -36,7 +36,7 @@ extern void print(const char *fmt, ...)
 	va_end(args);
 }
 
-void* memory_set(void* _Dst, s32 _Val, u32 _Size)
+extern void* memory_set(void* _Dst, s32 _Val, u32 _Size)
 {
 	return memset(_Dst, _Val, _Size);
 }
