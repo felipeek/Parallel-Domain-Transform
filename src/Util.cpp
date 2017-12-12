@@ -36,6 +36,11 @@ extern void print(const char *fmt, ...)
 	va_end(args);
 }
 
+void* memory_set(void* _Dst, s32 _Val, u32 _Size)
+{
+	return memset(_Dst, _Val, _Size);
+}
+
 extern s32 str_length(const s8* str)
 {
 	s32 len = 0;
@@ -184,7 +189,8 @@ extern r32* load_image(const s8* image_path,
 				auxiliary_data[i * *image_width * *image_channels + j * *image_channels + 1] / 255.0f;
 			image_data[i * *image_width * *image_channels + j * *image_channels + 2] =
 				auxiliary_data[i * *image_width * *image_channels + j * *image_channels + 2] / 255.0f;
-			image_data[i * *image_width * *image_channels + j * *image_channels + 3] = 1.0f;
+			image_data[i * *image_width * *image_channels + j * *image_channels + 3] =
+				auxiliary_data[i * *image_width * *image_channels + j * *image_channels + 3] / 255.0f;
 		}
 	}
 

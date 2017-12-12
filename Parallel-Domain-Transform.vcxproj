@@ -35,8 +35,10 @@
     <ClCompile Include="src\Util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\stb_truetype.h" />
     <ClInclude Include="src\Controller.h" />
     <ClInclude Include="src\Graphics.h" />
+    <ClInclude Include="src\Input.h" />
     <ClInclude Include="src\Mathematics.h" />
     <ClInclude Include="src\UI.h" />
     <ClInclude Include="include\dynamic_array.h" />

@@ -1,5 +1,7 @@
 #include "OS.h"
 #include "UI.h"
+#include "Util.h"
+#include "Input.h"
 #include <glad.h>
 
 #ifdef _WIN32
@@ -9,38 +11,73 @@
 #define WGL_CONTEXT_MINOR_VERSION_ARB           0x2092
 #define WGL_CONTEXT_FLAGS_ARB                   0x2094
 
+HWND main_window;
+
+HCURSOR arrow_cursor;
+HCURSOR move_cursor;
+
 #elif defined(__linux__)
 
 #endif
+
+Input_Data input_data;
 
 #ifdef _WIN32
 LRESULT CALLBACK wnd_proc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
 	{
+	case WM_MOUSEMOVE: {
+		//SetCapture(window);
+
+		r32 mx = (r32)LOWORD(lParam);
+		r32 my = (r32)HIWORD(lParam);
+
+		RECT r;
+		GetClientRect(window, &r);
+
+		if (!r.right || !r.bottom)
+		{
+			MessageBox(0, "Window size is zero.", "Fatal Error", 0);
+			ExitProcess(-1);
+		}
+
+		mx = ((mx / r.right) * 2.0f) - 1.0f;
+		my = ((my / r.bottom) * 2.0f) - 1.0f;
+
+		input_data.mx = mx;
+		input_data.my = -my;
+		return 0;
+	} break;
 	case WM_MOUSELEAVE: {
 		//OutputDebugString("it works");
 	} break;
 	case WM_KILLFOCUS: {
 		// resetar input
 	} break;
-	case WM_RBUTTONDOWN:
-	case WM_LBUTTONDOWN: {
-		SetCapture(window);
+	case WM_RBUTTONDOWN: {
+
 	} break;
-	case WM_RBUTTONUP:
+	case WM_LBUTTONDOWN: {
+		input_data.mclicked = 1;
+		//SetCapture(window);
+	} break;
+	case WM_RBUTTONUP: {
+
+	} break;
 	case WM_LBUTTONUP: {
-		ReleaseCapture();
+		input_data.mclicked = 0;
+		//ReleaseCapture();
 	} break;
 	case WM_SIZING:
 	case WM_SIZE: {
-		//RECT r;
-		//GetClientRect(window, &r);
-		//s32 width = r.right - r.left;
-		//s32 height = r.bottom - r.top;
-		//glViewport(0, 0, width, height);
-		//glClear(GL_COLOR_BUFFER_BIT);
-		//SwapBuffers(GetDC(window));
+		RECT r;
+		GetClientRect(window, &r);
+		s32 width = r.right - r.left;
+		s32 height = r.bottom - r.top;
+		glViewport(0, 0, width, height);
+		glClear(GL_COLOR_BUFFER_BIT);
+		SwapBuffers(GetDC(window));
 	} break;
 	case WM_DESTROY: {
 		PostQuitMessage(0);
@@ -96,18 +133,25 @@ static s32 create_opengl_context(HWND window)
 
 	wglMakeCurrent(hdc, context);
 
+	// Disable VSYNC
+	//BOOL (WINAPI* wglSwapIntervalEXT)(s32) = (BOOL(WINAPI*)(s32))wglGetProcAddress("wglSwapIntervalEXT");
+	//wglSwapIntervalEXT(0);
+
 	return 0;
 }
 
 extern s32 os_init_gui()
 {
+	HCURSOR arrow_cursor = LoadCursor(0, IDC_ARROW);
+	HCURSOR move_cursor = LoadCursor(0, IDC_SIZEALL);
+
 	static s8 window_class_name[] = "Main Window Class";
 
 	WNDCLASS window_class;
 	window_class.cbClsExtra = 0;
 	window_class.cbWndExtra = 0;
 	window_class.hbrBackground = 0;
-	window_class.hCursor = LoadCursor(0, IDC_ARROW);
+	window_class.hCursor = arrow_cursor;
 	window_class.hIcon = 0;
 	window_class.hInstance = GetModuleHandle(0);
 	window_class.lpfnWndProc = wnd_proc;
@@ -117,13 +161,13 @@ extern s32 os_init_gui()
 
 	RegisterClass(&window_class);
 
-	HWND main_window = CreateWindow(window_class_name,
+	main_window = CreateWindow(window_class_name,
 		"Hello World Application",
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
+		WINDOW_WIDTH,
+		WINDOW_HEIGHT,
 		0, 0, 0, 0);
 
 	if (create_opengl_context(main_window))
@@ -136,9 +180,11 @@ extern s32 os_init_gui()
 		MessageBox(0, "Error loading glad.", "Fatal Error", 0);
 		return -1;
 	}
-
+	
 	ShowWindow(main_window, SW_NORMAL);
 	UpdateWindow(main_window);
+
+	ShowCursor(FALSE);		// Hide Windows default cursor
 
 	ui_init();
 
@@ -152,6 +198,9 @@ extern s32 os_init_gui()
 	HDC hdc = GetDC(main_window);
 
 	s32 running = 1;
+
+	s32 fps = 0;
+	start_clock();
 	while (running)
 	{
 		TrackMouseEvent(&tme);
@@ -168,8 +217,16 @@ extern s32 os_init_gui()
 			DispatchMessage(&msg);
 		}
 		
+		ui_update();
 		ui_render();
 		SwapBuffers(hdc);
+		++fps;
+		if (end_clock() >= 1.0f)
+		{
+			print("FPS: %d\n", fps);
+			start_clock();
+			fps = 0;
+		}
 	}
 	
 	return msg.wParam;

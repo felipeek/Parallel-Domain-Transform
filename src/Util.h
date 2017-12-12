@@ -14,6 +14,7 @@ typedef s32 Thread_Proc_Return_Type;
 typedef Thread_Proc_Return_Type (_stdcall *THREAD_FUNCTION)(void*);
 
 extern void print(const char *fmt, ...);
+void* memory_set(void* _Dst, s32 _Val, u32 _Size);
 extern s32 str_length(const s8* str);
 extern r32 str_to_r32(const s8* str);
 extern s32 str_to_s32(const s8* str);
