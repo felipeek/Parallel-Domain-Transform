@@ -9,6 +9,7 @@ typedef void* Thread_Proc_Return_Type;
 #elif defined(_WIN32)
 typedef void* Thread_Handler;
 typedef s32 Thread_Proc_Return_Type;
+typedef void* Mutex_Handler;
 #endif
 
 typedef Thread_Proc_Return_Type (_stdcall *THREAD_FUNCTION)(void*);
@@ -46,3 +47,6 @@ extern r32* load_image(const s8* image_path,
 	s32 desired_channels);
 extern u8* read_file(u8* filename, s64* out_size);
 extern void free_file(u8* file);
+extern Mutex_Handler create_mutex();
+extern void lock_mutex(Mutex_Handler mh);
+extern void release_mutex(Mutex_Handler mh);

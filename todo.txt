@@ -1,0 +1,5 @@
+- linux support
+- window overlapping
+- color picker
+- stop processing when nothing is happening
+- YUV using GPU

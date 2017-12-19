@@ -2,7 +2,6 @@
 
 #include "Common.h"
 
-#define WINDOW_WIDTH 1024
-#define WINDOW_HEIGHT 768
-
 extern s32 os_init_gui();
+extern bool os_save_file_dialog(s8* buffer, s32 buffer_size);
+extern bool os_open_file_dialog(s8* buffer, s32 buffer_size);

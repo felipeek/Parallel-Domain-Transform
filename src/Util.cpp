@@ -169,6 +169,7 @@ extern r32* load_image(const s8* image_path,
 	s32* image_channels,
 	s32 desired_channels)
 {
+	stbi_set_flip_vertically_on_load(1);
 	u8* auxiliary_data = stbi_load(image_path, image_width, image_height, image_channels, DEFAULT_IMAGE_CHANNELS);
 
 	if (auxiliary_data == 0)
@@ -217,7 +218,7 @@ extern void store_image(const s8* result_path,
 			auxiliary_data[i * image_width * image_channels + j * image_channels + 3] = 255;
 		}
 	}
-
+	stbi_write_set_flip_vertically_on_save(1);
 	stbi_write_png(result_path, image_width, image_height, image_channels, auxiliary_data, image_width * image_channels);
 	dealloc_memory(auxiliary_data);
 }
@@ -271,4 +272,26 @@ extern void free_file(u8* file)
 }
 #elif define(__linux__)
 #error "free_file not implemented for linux"
+#endif
+
+#ifdef _WIN32
+extern Mutex_Handler create_mutex()
+{
+	return CreateMutex(
+		NULL,              // default security attributes
+		FALSE,             // initially not owned
+		NULL);             // unnamed mutex
+}
+
+extern void lock_mutex(Mutex_Handler mh)
+{
+	WaitForSingleObject(mh, INFINITE);
+}
+
+extern void release_mutex(Mutex_Handler mh)
+{
+	ReleaseMutex(mh);
+}
+#elif define(__linux__)
+#error "mutex not implmeneted for linux"
 #endif

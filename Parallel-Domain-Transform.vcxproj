@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Controller.cpp" />
+    <ClCompile Include="include\stb_truetype.c" />
     <ClCompile Include="src\Graphics.cpp" />
     <ClCompile Include="src\Mathematics.cpp" />
     <ClCompile Include="src\UI.cpp" />
@@ -35,8 +35,8 @@
     <ClCompile Include="src\Util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\stb_rect_pack.h" />
     <ClInclude Include="include\stb_truetype.h" />
-    <ClInclude Include="src\Controller.h" />
     <ClInclude Include="src\Graphics.h" />
     <ClInclude Include="src\Input.h" />
     <ClInclude Include="src\Mathematics.h" />
@@ -131,7 +131,7 @@
     <Link>
       <AdditionalLibraryDirectories>lib\</AdditionalLibraryDirectories>
       <Profile>true</Profile>
-      <AdditionalDependencies>opengl32.lib;kernel32.lib;user32.lib;gdi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;kernel32.lib;user32.lib;gdi32.lib;Comdlg32.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -153,13 +153,14 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>include\</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>lib\</AdditionalLibraryDirectories>
       <Profile>true</Profile>
-      <AdditionalDependencies>opengl32.lib;kernel32.lib;user32.lib;gdi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;kernel32.lib;user32.lib;gdi32.lib;Comdlg32.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
