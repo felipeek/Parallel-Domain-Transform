@@ -193,12 +193,27 @@ extern s32 os_init_gui()
 	MSG msg;
 	s32 running = 1, fps = 0;
 
-	while (running)
-	{
+	//while (running)
+	//{
 		//TrackMouseEvent(&tme);
 		
-		while(GetMessage(&msg, 0, 0, 0))
-		//while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE) > 0)
+		ui_update();
+		ui_render();
+
+		while (GetMessage(&msg, 0, 0, 0))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+			
+			ui_update();
+			ui_render();
+
+			HDC hdc = GetDC(main_window);
+			SwapBuffers(hdc);
+			ReleaseDC(main_window, hdc);
+		}
+
+		/*while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE) > 0)
 		{
 			if (msg.message == WM_QUIT)
 			{
@@ -208,14 +223,14 @@ extern s32 os_init_gui()
 
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
-
-			ui_update();
-			ui_render();
-
-			HDC hdc = GetDC(main_window);
-			SwapBuffers(hdc);
-			ReleaseDC(main_window, hdc);
 		}
+
+		ui_update();
+		ui_render();
+
+		HDC hdc = GetDC(main_window);
+		SwapBuffers(hdc);
+		ReleaseDC(main_window, hdc);
 
 		++fps;
 
@@ -224,8 +239,8 @@ extern s32 os_init_gui()
 			print("FPS: %d\n", fps);
 			//start_clock();
 			fps = 0;
-		}
-	}
+		}*/
+	//}
 	
 	return msg.wParam;
 }
