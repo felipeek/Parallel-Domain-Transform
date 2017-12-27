@@ -20,12 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Common.h" />
-    <ClCompile Include="src\Epilogue.cpp" />
-    <ClCompile Include="src\EpilogueT.cpp" />
     <ClCompile Include="src\Main.cpp" />
-    <ClCompile Include="src\ParallelDomainTransform.cpp" />
-    <ClCompile Include="src\Prologue.cpp" />
-    <ClCompile Include="src\PrologueT.cpp" />
+    <ClCompile Include="src\DomainTransform.cpp" />
     <ClCompile Include="src\Util.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -33,11 +29,7 @@
     <ClInclude Include="include\memory_arena.h" />
     <ClInclude Include="include\stb_image.h" />
     <ClInclude Include="include\stb_image_write.h" />
-    <ClInclude Include="src\Epilogue.h" />
-    <ClInclude Include="src\EpilogueT.h" />
-    <ClInclude Include="src\ParallelDomainTransform.h" />
-    <ClInclude Include="src\Prologue.h" />
-    <ClInclude Include="src\PrologueT.h" />
+    <ClInclude Include="src\DomainTransform.h" />
     <ClInclude Include="src\Util.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -50,13 +42,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
