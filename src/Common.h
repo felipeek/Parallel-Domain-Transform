@@ -36,5 +36,3 @@ struct Struct_Image_Information
 	s32 height;
 	s32 channels;
 };
-
-#undef internal

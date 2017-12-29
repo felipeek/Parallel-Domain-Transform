@@ -95,7 +95,7 @@ static Thread_Proc_Return_Type _stdcall fill_blocks_from_prologuesT_thread_proc(
 			block_information->image_result[j * block_information->image_information->width *
 				block_information->image_information->channels + i * block_information->image_information->channels + 2] = last_pixel.b;
 			block_information->image_result[j * block_information->image_information->width *
-				block_information->image_information->channels + i * block_information->image_information->channels + 3] = 255;
+				block_information->image_information->channels + i * block_information->image_information->channels + 3] = 1.0f;
 		}
 	}
 

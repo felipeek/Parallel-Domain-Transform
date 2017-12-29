@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
-#include <memory_arena.h>
 #include <iostream>
 #include <chrono>
 #include <string.h>
@@ -19,7 +18,6 @@
 
 #define ARENA_SIZE 1073741824
 std::chrono::time_point<std::chrono::system_clock> aux;
-Memory_Arena arena;
 s32 arena_valid = 0;
 
 extern void print(const char *fmt, ...)
@@ -62,22 +60,6 @@ extern void* alloc_memory(const s32 size)
 extern void dealloc_memory(void* ptr)
 {
 	return free(ptr);
-}
-
-extern void* alloc_arena_memory(const s32 size)
-{
-	if (!arena_valid)
-	{
-		arena_create(&arena, ARENA_SIZE);
-		arena_valid = 1;
-	}
-
-	return arena_alloc(&arena, size);
-}
-
-extern void dealloc_arena_memory()
-{
-	arena_release(&arena);
 }
 
 extern Thread_Handler create_thread(THREAD_FUNCTION function, void* parameters)
