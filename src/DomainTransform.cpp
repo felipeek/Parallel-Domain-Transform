@@ -123,7 +123,7 @@ extern s32 domain_transform(const r32* image_bytes,
 	{
 		for (s32 j = 0; j < RF_TABLE_SIZE; ++j)
 		{
-			d = 1.0f + (spatial_factor / range_factor) * j;
+			d = 1.0f + (spatial_factor / range_factor) * ((float)j / 255.0f);
 			rf_table[i][j] = r32_pow(rf_coefficients[i], d);
 		}
 	}
@@ -143,71 +143,6 @@ extern s32 domain_transform(const r32* image_bytes,
 	// Filter Iterations
 	for (s32 n = 0; n < num_iterations; ++n)
 	{
-		// Vertical Filter (Top-Down)
-		for (s32 i = 0; i < image_width; ++i)
-		{
-			r32 last_pixel_r, last_pixel_g, last_pixel_b;
-			r32 current_pixel_r, current_pixel_g, current_pixel_b;
-
-			last_pixel_r = image_result[i * image_channels];
-			last_pixel_g = image_result[i * image_channels + 1];
-			last_pixel_b = image_result[i * image_channels + 2];
-
-			for (s32 j = 0; j < image_height; ++j)
-			{
-				s32 d = vertical_domain_transforms[j * image_width + i];
-				r32 w = rf_table[n][d];
-
-				current_pixel_r = image_result[j * image_width * image_channels + i * image_channels];
-				current_pixel_g = image_result[j * image_width * image_channels + i * image_channels + 1];
-				current_pixel_b = image_result[j * image_width * image_channels + i * image_channels + 2];
-
-				last_pixel_r = ((1 - w) * current_pixel_r + w * last_pixel_r);
-				last_pixel_g = ((1 - w) * current_pixel_g + w * last_pixel_g);
-				last_pixel_b = ((1 - w) * current_pixel_b + w * last_pixel_b);
-				if (last_pixel_r < 0 || last_pixel_r > 1 || last_pixel_g < 0 || last_pixel_g > 1 || last_pixel_b < 0 || last_pixel_b > 1)
-				{
-					int k = 0;
-					k = 1;
-				}
-				image_result[j * image_width * image_channels + i * image_channels] = last_pixel_r;
-				image_result[j * image_width * image_channels + i * image_channels + 1] = last_pixel_g;
-				image_result[j * image_width * image_channels + i * image_channels + 2] = last_pixel_b;
-				image_result[j * image_width * image_channels + i * image_channels + 3] = 1.0f;
-			}
-		}
-
-		// Vertical Filter (Bottom-Up)
-		for (s32 i = 0; i < image_width; ++i)
-		{
-			r32 last_pixel_r, last_pixel_g, last_pixel_b;
-			r32 current_pixel_r, current_pixel_g, current_pixel_b;
-
-			last_pixel_r = image_result[(image_height - 1) * image_width * image_channels + i * image_channels];
-			last_pixel_g = image_result[(image_height - 1) * image_width * image_channels + i * image_channels + 1];
-			last_pixel_b = image_result[(image_height - 1) * image_width * image_channels + i * image_channels + 2];
-
-			for (s32 j = image_height - 1; j >= 0; --j)
-			{
-				s32 d_y_position = (j < image_height - 1) ? j + 1 : j;
-				s32 d = vertical_domain_transforms[d_y_position * image_width + i];
-				r32 w = rf_table[n][d];
-
-				current_pixel_r = image_result[j * image_width * image_channels + i * image_channels];
-				current_pixel_g = image_result[j * image_width * image_channels + i * image_channels + 1];
-				current_pixel_b = image_result[j * image_width * image_channels + i * image_channels + 2];
-
-				last_pixel_r = ((1 - w) * current_pixel_r + w * last_pixel_r);
-				last_pixel_g = ((1 - w) * current_pixel_g + w * last_pixel_g);
-				last_pixel_b = ((1 - w) * current_pixel_b + w * last_pixel_b);
-
-				image_result[j * image_width * image_channels + i * image_channels] = last_pixel_r;
-				image_result[j * image_width * image_channels + i * image_channels + 1] = last_pixel_g;
-				image_result[j * image_width * image_channels + i * image_channels + 2] = last_pixel_b;
-				image_result[j * image_width * image_channels + i * image_channels + 3] = 1.0f;
-			}
-		}
-
 		// Horizontal Filter (Left-Right)
 		for (s32 j = 0; j < image_height; ++j)
 		{
@@ -252,6 +187,67 @@ extern s32 domain_transform(const r32* image_bytes,
 			{
 				s32 d_x_position = (i < image_width - 1) ? i + 1 : i;
 				s32 d = horizontal_domain_transforms[j * image_width + d_x_position];
+				r32 w = rf_table[n][d];
+
+				current_pixel_r = image_result[j * image_width * image_channels + i * image_channels];
+				current_pixel_g = image_result[j * image_width * image_channels + i * image_channels + 1];
+				current_pixel_b = image_result[j * image_width * image_channels + i * image_channels + 2];
+
+				last_pixel_r = ((1 - w) * current_pixel_r + w * last_pixel_r);
+				last_pixel_g = ((1 - w) * current_pixel_g + w * last_pixel_g);
+				last_pixel_b = ((1 - w) * current_pixel_b + w * last_pixel_b);
+
+				image_result[j * image_width * image_channels + i * image_channels] = last_pixel_r;
+				image_result[j * image_width * image_channels + i * image_channels + 1] = last_pixel_g;
+				image_result[j * image_width * image_channels + i * image_channels + 2] = last_pixel_b;
+				image_result[j * image_width * image_channels + i * image_channels + 3] = 1.0f;
+			}
+		}
+
+		// Vertical Filter (Top-Down)
+		for (s32 i = 0; i < image_width; ++i)
+		{
+			r32 last_pixel_r, last_pixel_g, last_pixel_b;
+			r32 current_pixel_r, current_pixel_g, current_pixel_b;
+
+			last_pixel_r = image_result[i * image_channels];
+			last_pixel_g = image_result[i * image_channels + 1];
+			last_pixel_b = image_result[i * image_channels + 2];
+
+			for (s32 j = 0; j < image_height; ++j)
+			{
+				s32 d = vertical_domain_transforms[j * image_width + i];
+				r32 w = rf_table[n][d];
+
+				current_pixel_r = image_result[j * image_width * image_channels + i * image_channels];
+				current_pixel_g = image_result[j * image_width * image_channels + i * image_channels + 1];
+				current_pixel_b = image_result[j * image_width * image_channels + i * image_channels + 2];
+
+				last_pixel_r = ((1 - w) * current_pixel_r + w * last_pixel_r);
+				last_pixel_g = ((1 - w) * current_pixel_g + w * last_pixel_g);
+				last_pixel_b = ((1 - w) * current_pixel_b + w * last_pixel_b);
+
+				image_result[j * image_width * image_channels + i * image_channels] = last_pixel_r;
+				image_result[j * image_width * image_channels + i * image_channels + 1] = last_pixel_g;
+				image_result[j * image_width * image_channels + i * image_channels + 2] = last_pixel_b;
+				image_result[j * image_width * image_channels + i * image_channels + 3] = 1.0f;
+			}
+		}
+
+		// Vertical Filter (Bottom-Up)
+		for (s32 i = 0; i < image_width; ++i)
+		{
+			r32 last_pixel_r, last_pixel_g, last_pixel_b;
+			r32 current_pixel_r, current_pixel_g, current_pixel_b;
+
+			last_pixel_r = image_result[(image_height - 1) * image_width * image_channels + i * image_channels];
+			last_pixel_g = image_result[(image_height - 1) * image_width * image_channels + i * image_channels + 1];
+			last_pixel_b = image_result[(image_height - 1) * image_width * image_channels + i * image_channels + 2];
+
+			for (s32 j = image_height - 1; j >= 0; --j)
+			{
+				s32 d_y_position = (j < image_height - 1) ? j + 1 : j;
+				s32 d = vertical_domain_transforms[d_y_position * image_width + i];
 				r32 w = rf_table[n][d];
 
 				current_pixel_r = image_result[j * image_width * image_channels + i * image_channels];
