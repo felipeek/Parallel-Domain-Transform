@@ -378,7 +378,7 @@ extern s32 parallel_colorization(const r32* image_bytes,
 	{
 		for (s32 j = 0; j < RF_TABLE_SIZE; ++j)
 		{
-			d = 1.0f + (spatial_factor / range_factor) * j;
+			d = 1.0f + (spatial_factor / range_factor) * ((r32)j / 255.0f);
 			rf_table[i][j] = r32_pow(rf_coefficients[i], d);
 		}
 	}
