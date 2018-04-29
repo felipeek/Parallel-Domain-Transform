@@ -18,7 +18,7 @@ extern void calculate_complete_prologuesT(Image_Information* image_information,
 
 				if (j != 0)
 				{
-					last_prologueT = {
+					last_prologueT = (R32_Color){
 						complete_prologuesT[i * parallelism_level_x + j - 1][k * image_information->channels + 0],
 						complete_prologuesT[i * parallelism_level_x + j - 1][k * image_information->channels + 1],
 						complete_prologuesT[i * parallelism_level_x + j - 1][k * image_information->channels + 2]
@@ -26,7 +26,7 @@ extern void calculate_complete_prologuesT(Image_Information* image_information,
 				}
 				else
 				{
-					last_prologueT = { 0.0f, 0.0f, 0.0f };
+					last_prologueT = (R32_Color){ 0.0f, 0.0f, 0.0f };
 				}
 
 				// R Channel
@@ -56,7 +56,7 @@ static Thread_Proc_Return_Type _stdcall fill_blocks_from_prologuesT_thread_proc(
 
 		if (block_information->last_prologuesT)
 		{
-			last_pixel = {
+			last_pixel = (R32_Color){
 				block_information->last_prologuesT[count * block_information->image_information->channels],
 				block_information->last_prologuesT[count * block_information->image_information->channels + 1],
 				block_information->last_prologuesT[count * block_information->image_information->channels + 2],
@@ -64,7 +64,7 @@ static Thread_Proc_Return_Type _stdcall fill_blocks_from_prologuesT_thread_proc(
 		}
 		else
 		{
-			last_pixel = {
+			last_pixel = (R32_Color){
 				block_information->image_bytes[j * block_information->image_information->width *
 					block_information->image_information->channels + block_information->block->x * block_information->image_information->channels],
 				block_information->image_bytes[j * block_information->image_information->width *

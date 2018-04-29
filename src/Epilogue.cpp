@@ -18,7 +18,7 @@ extern void calculate_complete_epilogues(Image_Information* image_information,
 
 				if (i != parallelism_level_y - 1)
 				{
-					last_epilogue = {
+					last_epilogue = (R32_Color){
 						complete_epilogues[(i + 1) * parallelism_level_x + j][k * image_information->channels + 0],
 						complete_epilogues[(i + 1) * parallelism_level_x + j][k * image_information->channels + 1],
 						complete_epilogues[(i + 1) * parallelism_level_x + j][k * image_information->channels + 2]
@@ -26,7 +26,7 @@ extern void calculate_complete_epilogues(Image_Information* image_information,
 				}
 				else
 				{
-					last_epilogue = { 0.0f, 0.0f, 0.0f };
+					last_epilogue = (R32_Color){ 0.0f, 0.0f, 0.0f };
 				}
 
 				// R Channel
@@ -56,7 +56,7 @@ static Thread_Proc_Return_Type _stdcall fill_blocks_from_epilogues_thread_proc(v
 
 		if (block_information->last_epilogues)
 		{
-			last_pixel = {
+			last_pixel = (R32_Color){
 				block_information->last_epilogues[count * block_information->image_information->channels],
 				block_information->last_epilogues[count * block_information->image_information->channels + 1],
 				block_information->last_epilogues[count * block_information->image_information->channels + 2],
@@ -64,7 +64,7 @@ static Thread_Proc_Return_Type _stdcall fill_blocks_from_epilogues_thread_proc(v
 		}
 		else
 		{
-			last_pixel = {
+			last_pixel = (R32_Color){
 				block_information->image_bytes[(block_information->block->y + block_information->block->height - 1) * block_information->image_information->width *
 					block_information->image_information->channels + i * block_information->image_information->channels],
 				block_information->image_bytes[(block_information->block->y + block_information->block->height - 1) * block_information->image_information->width *

@@ -1,7 +1,12 @@
 #pragma once
 #include "Common.h"
 
-#ifdef __linux__
+#ifdef __APPLE__
+#include <pthread.h>
+typedef pthread_t Thread_Handler;
+typedef void* Thread_Proc_Return_Type;
+#define _stdcall
+#elif __linux__
 #include <pthread.h>
 typedef pthread_t Thread_Handler;
 typedef void* Thread_Proc_Return_Type;

@@ -14,9 +14,10 @@
 #include <windows.h>
 #elif defined(__linux__)
 #include <pthread.h>
+#elif defined(__APPLE__)
+#include <pthread.h>
 #endif
 
-#define ARENA_SIZE 1073741824
 std::chrono::time_point<std::chrono::system_clock> aux;
 s32 arena_valid = 0;
 
@@ -70,6 +71,10 @@ extern Thread_Handler create_thread(THREAD_FUNCTION function, void* parameters)
 	pthread_t thread;
 	pthread_create(&thread, 0, function, parameters);
 	return thread;
+#elif defined(__APPLE__)
+	pthread_t thread;
+	pthread_create(&thread, 0, function, parameters);
+	return thread;
 #endif
 }
 
@@ -78,6 +83,9 @@ extern s32 join_threads(s32 number_of_threads, Thread_Handler* threads_array, s3
 #ifdef _WIN32
 	return WaitForMultipleObjects(number_of_threads, threads_array, wait_all, INFINITE);
 #elif defined(__linux__)
+	for (s32 i = 0; i < number_of_threads; ++i)
+		pthread_join(threads_array[i], 0);
+#elif defined(__APPLE__)
 	for (s32 i = 0; i < number_of_threads; ++i)
 		pthread_join(threads_array[i], 0);
 #endif
