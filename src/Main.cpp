@@ -1,220 +1,80 @@
-#define _CRT_SECURE_NO_WARNINGS
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-
-#include <stb_image.h>
-#include <stb_image_write.h>
-#include "Util.h"
+/*
+* Created on 10 September, 2012, 7:48 PM
+*/
+ 
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <iostream>
 #include "ParallelDomainTransform.h"
-
-#define DEFAULT_IMAGE_PATH "./res/img.jpg"
-#define DEFAULT_SPATIAL_FACTOR 0.1f
-#define DEFAULT_RANGE_FACTOR 1.0f
-#define DEFAULT_NUM_ITERATIONS 4
-#define DEFAULT_PARALLELISM_LEVEL_X 16
-#define DEFAULT_PARALLELISM_LEVEL_Y 16
-#define DEFAULT_NUMBER_OF_THREADS 1
-#define DEFAULT_COLLECT_TIME 1
-#define DEFAULT_RESULT_PATH "./res/output.png"
-#define DEFAULT_IMAGE_CHANNELS 4
-
-static r32* load_image(const s8* image_path,
-	s32* image_width,
-	s32* image_height,
-	s32* image_channels,
-	s32 desired_channels)
+#include "Util.h"
+using namespace cv;
+using namespace std;
+ 
+Mat filterCameraFrame(Mat cameraFrame, float* image_data, float* result)
 {
-	u8* auxiliary_data = stbi_load(image_path, image_width, image_height, image_channels, DEFAULT_IMAGE_CHANNELS);
+    float ss = 20.0f;
+    float sr = 1.0f;
+    int num_iterations = 3;
 
-	if (auxiliary_data == 0)
-		return 0;
+    for (int i = 0; i < cameraFrame.rows; ++i)
+        for (int j = 0; j < cameraFrame.cols; ++j)
+        {
+            image_data[4 * cameraFrame.cols * i + 4 * j + 0] = cameraFrame.data[3 * cameraFrame.cols * i + 3 * j + 0] / 255.0f;
+            image_data[4 * cameraFrame.cols * i + 4 * j + 1] = cameraFrame.data[3 * cameraFrame.cols * i + 3 * j + 1] / 255.0f;
+            image_data[4 * cameraFrame.cols * i + 4 * j + 2] = cameraFrame.data[3 * cameraFrame.cols * i + 3 * j + 2] / 255.0f;
+            image_data[4 * cameraFrame.cols * i + 4 * j + 3] = 1.0f;
+        }
 
-	// @TODO: check WHY this is happening
-	*image_channels = 4;
+    start_clock();
+    s32 threads = 8;
+    s32 x = 1;
+    s32 y = 16;
+    parallel_domain_transform(image_data, cameraFrame.cols, cameraFrame.rows, 4, ss, sr, num_iterations,
+        threads, x, y, result);
+    r32 total_time = end_clock();
 
-	r32* image_data = (r32*)alloc_memory(sizeof(r32) * *image_height * *image_width * *image_channels);
+	print("Total time: %.3f seconds\n", total_time);
 
-	for (s32 i = 0; i < *image_height; ++i)
-	{
-		for (s32 j = 0; j < *image_width; ++j)
-		{
-			image_data[i * *image_width * *image_channels + j * *image_channels] =
-				auxiliary_data[i * *image_width * *image_channels + j * *image_channels] / 255.0f;
-			image_data[i * *image_width * *image_channels + j * *image_channels + 1] =
-				auxiliary_data[i * *image_width * *image_channels + j * *image_channels + 1] / 255.0f;
-			image_data[i * *image_width * *image_channels + j * *image_channels + 2] =
-				auxiliary_data[i * *image_width * *image_channels + j * *image_channels + 2] / 255.0f;
-			image_data[i * *image_width * *image_channels + j * *image_channels + 3] = 1.0f;
-		}
-	}
+    for (int i = 0; i < cameraFrame.rows; ++i)
+        for (int j = 0; j < cameraFrame.cols; ++j)
+        {
+            cameraFrame.data[3 * cameraFrame.cols * i + 3 * j + 0] = (u8)roundf(result[4 * cameraFrame.cols * i + 4 * j + 0] * 255.0f);
+            cameraFrame.data[3 * cameraFrame.cols * i + 3 * j + 1] = (u8)roundf(result[4 * cameraFrame.cols * i + 4 * j + 1] * 255.0f);
+            cameraFrame.data[3 * cameraFrame.cols * i + 3 * j + 2] = (u8)roundf(result[4 * cameraFrame.cols * i + 4 * j + 2] * 255.0f);
+        }
 
-	stbi_image_free(auxiliary_data);
-
-	return image_data;
+    return cameraFrame;
 }
 
-static void store_image(const s8* result_path,
-	s32 image_width,
-	s32 image_height,
-	s32 image_channels,
-	const r32* image_bytes)
-{
-	u8* auxiliary_data = (u8*)alloc_memory(image_height * image_width * sizeof(u8) * image_channels);
+int main() {
+    VideoCapture stream1(0);   //0 is the id of video device.0 if you have only one camera.
+    
+    stream1.set(CV_CAP_PROP_FRAME_WIDTH,640);
+    stream1.set(CV_CAP_PROP_FRAME_HEIGHT,480);
 
-	for (s32 i = 0; i < image_height; ++i)
-	{
-		for (s32 j = 0; j < image_width; ++j)
-		{
-			auxiliary_data[i * image_width * image_channels + j * image_channels] = (u8)r32_round(255.0f * image_bytes[i * image_width * image_channels + j * image_channels]);
-			auxiliary_data[i * image_width * image_channels + j * image_channels + 1] = (u8)r32_round(255.0f * image_bytes[i * image_width * image_channels + j * image_channels + 1]);
-			auxiliary_data[i * image_width * image_channels + j * image_channels + 2] = (u8)r32_round(255.0f * image_bytes[i * image_width * image_channels + j * image_channels + 2]);
-			auxiliary_data[i * image_width * image_channels + j * image_channels + 3] = 255;
-		}
-	}
-	
-	stbi_write_png(result_path, image_width, image_height, image_channels, auxiliary_data, image_width * image_channels);
-	dealloc_memory(auxiliary_data);
-}
+    int width = (int)stream1.get(CV_CAP_PROP_FRAME_WIDTH);
+    int height = (int)stream1.get(CV_CAP_PROP_FRAME_HEIGHT);
 
-static void print_help_message(const s8* exe_name)
-{
-	print("Usage: %s\n\n", exe_name);
-	print("Optional Parameters:\n");
-	print("\tImage Path: -p <string>\n");
-	print("\tSpatial Factor: -s <r32>\n");
-	print("\tRange Factor: -r <r32>\n");
-	print("\tNumber of Iterations: -i <s32>\n");
-	print("\tParallelism Level (X Axis): -x <s32>\n");
-	print("\tParallelism Level (Y Axis): -y <s32>\n");
-	print("\tNumber of Threads (MAX 64): -t <s32>\n");
-	print("\tCollect Time: -c <1 or 0>\n");
-	print("\tResult Path: -o <string>\n");
-	print("\tHelp: -h\n");
-}
+    print("width: %d, height: %d\n", width, height);
 
-extern s32 main(s32 argc, s8** argv)
-{
-	s8 default_image_path[] = DEFAULT_IMAGE_PATH;
-	s8 default_result_path[] = DEFAULT_RESULT_PATH;
-	
-	s8* image_path = 0;
-	r32 spatial_factor = DEFAULT_SPATIAL_FACTOR;
-	r32 range_factor = DEFAULT_RANGE_FACTOR;
-	s32 num_iterations = DEFAULT_NUM_ITERATIONS;
-	s32 parallelism_level_x = DEFAULT_PARALLELISM_LEVEL_X;
-	s32 parallelism_level_y = DEFAULT_PARALLELISM_LEVEL_Y;
-	s32 number_of_threads = DEFAULT_NUMBER_OF_THREADS;
-	s32 collect_time = DEFAULT_COLLECT_TIME;
-	s8* result_path = 0;
-	
-	if (argc % 2 != 0)
-	{
-		for (s32 i = 1; i < argc; i += 2)
-		{
-			if ((argv[i][0] == '-' || argv[i][0] == '/') && str_length(argv[i]) == 2)
-			{
-				switch (argv[i][1])
-				{
-				// Image Path
-				case 'p': {
-					image_path = argv[i + 1];
-				} break;
-				// Spatial Factor
-				case 's': {
-					spatial_factor = str_to_r32(argv[i + 1]);
-				} break;
-				// Range Factor
-				case 'r': {
-					range_factor = str_to_r32(argv[i + 1]);
-				} break;
-				// Number of Iterations
-				case 'i': {
-					num_iterations = str_to_s32(argv[i + 1]);
-				} break;
-				// Parallelism Level X
-				case 'x': {
-					parallelism_level_x = str_to_s32(argv[i + 1]);
-				} break;
-				// Parallelism Level Y
-				case 'y': {
-					parallelism_level_y = str_to_s32(argv[i + 1]);
-				} break;
-				// Number of Threads
-				case 't': {
-					number_of_threads = str_to_s32(argv[i + 1]);
-					if (number_of_threads > 64)
-					{
-						print("Warning: The maximum number of threads is 64.\n");
-						print("The number of threads was automatically modified to 64.\n");
-						number_of_threads = 64;
-					}
-				} break;
-				// Collect Time
-				case 'c': {
-					collect_time = str_to_s32(argv[i + 1]);
-				} break;
-				// Result Path
-				case 'o': {
-					result_path = argv[i + 1];
-				} break;
-				// Help
-				case 'h':
-				default: {
-					print_help_message(argv[0]);
-					return 0;
-				} break;
-				}
-			}
-		}
-	}
-	else
-	{
-		print_help_message(argv[0]);
-		return 0;
-	}
+    float *image_data = (float *)malloc(4 * sizeof(float) * width * height);
+    float *result = (float *)malloc(4 * sizeof(float) * width * height);
 
-	s32 image_width, image_height, image_channels;
-	r32* image_bytes;
-	r32* image_result;
+    if (!stream1.isOpened()) { //check if video device has been initialised
+        cout << "cannot open camera";
+    }
+    
+    while (true) {
+        Mat cameraFrame;
+        stream1.read(cameraFrame);
+        cameraFrame = filterCameraFrame(cameraFrame, image_data, result);
+        imshow("cam", cameraFrame);
+        imshow("cam2", cameraFrame);
+        if (waitKey(30) >= 0)
+        break;
+    }
 
-	if (image_path)
-		image_bytes = load_image(image_path, &image_width, &image_height, &image_channels, DEFAULT_IMAGE_CHANNELS);
-	else
-		image_bytes = load_image(default_image_path, &image_width, &image_height, &image_channels, DEFAULT_IMAGE_CHANNELS);
-
-	if (!image_bytes)
-	{
-		print("Error: Could not load image %s\n", image_path);
-		return -1;
-	}
-
-	image_result = (r32*)alloc_memory(sizeof(r32) * image_width * image_height * image_channels);
-
-	start_clock();
-
-	s32 domain_transform_error_code = parallel_domain_transform(image_bytes, image_width, image_height, image_channels, spatial_factor, range_factor,
-		num_iterations, number_of_threads, parallelism_level_x, parallelism_level_y, image_result);
-
-	r32 total_time = end_clock();
-
-	switch (domain_transform_error_code)
-	{
-	case -1: {
-		print("Error: Domain Transform Failed (Unknown Reason).\n");
-		return -1;
-	} break;
-	}
-
-	if (collect_time)
-		print("Total time: %.3f seconds\n", total_time);
-
-	if (result_path)
-		store_image(result_path, image_width, image_height, image_channels, image_result);
-	else
-		store_image(default_result_path, image_width, image_height, image_channels, image_result);
-	
-	dealloc_memory(image_bytes);
-	dealloc_memory(image_result);
-
-	return 0;
+    free(image_data);
+    free(result);
+    return 0;
 }
