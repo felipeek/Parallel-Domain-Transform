@@ -5,6 +5,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
+#include <algorithm>
 #include "ParallelDomainTransform.h"
 #include "Util.h"
 using namespace cv;
@@ -31,6 +32,7 @@ Mat filterCameraFrame(Mat cameraFrame, float* image_data, float* result)
     s32 y = 16;
     parallel_domain_transform(image_data, cameraFrame.cols, cameraFrame.rows, 4, ss, sr, num_iterations,
         threads, x, y, result);
+    //std::copy(image_data, image_data + cameraFrame.cols * cameraFrame.rows * 4, result);
     r32 total_time = end_clock();
 
 	print("Total time: %.3f seconds\n", total_time);
@@ -63,13 +65,19 @@ int main() {
     if (!stream1.isOpened()) { //check if video device has been initialised
         cout << "cannot open camera";
     }
+
+    namedWindow("input");
+    moveWindow("input", 0,0);
+
+    namedWindow("output");
+    moveWindow("output", width,0);
     
     while (true) {
         Mat cameraFrame;
         stream1.read(cameraFrame);
+        imshow("input", cameraFrame);
         cameraFrame = filterCameraFrame(cameraFrame, image_data, result);
-        imshow("cam", cameraFrame);
-        imshow("cam2", cameraFrame);
+        imshow("output", cameraFrame);
         if (waitKey(30) >= 0)
         break;
     }
