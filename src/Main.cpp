@@ -14,10 +14,12 @@ using namespace std;
 #define S_R 0.6f
 #define NUM_ITERATIONS 2
 #define DETAIL_HIGHLIGHT_FACTOR 1.8f
-#define USE_GAUSSIAN_BLUR_BEFORE_CANNY
-#define CANNY_THRESHOLD1 (3 * 30.0f)
-#define CANNY_THRESHOLD2 (1 * 30.0f)
-#define CANNY_LINE_RADIUS 1
+//#define USE_GAUSSIAN_BLUR_BEFORE_CANNY
+#define MERGE_SOBEL_LIMIAR 12
+#define MERGE_SOBEL_LINE_INTENSITY 8
+#define SOBEL_KSIZE 1
+#define SOBEL_SCALE 1
+#define SOBEL_DELTA 0
 
 void u8ImageToFloatImage(Mat input, float* output_memory)
 {
@@ -83,26 +85,20 @@ void filterCameraFrame(Mat cameraFrame, Mat* filteredFrame, Mat* detailedFrame,
     *detailedFrame = cv::Mat(cameraFrame.rows, cameraFrame.cols, CV_32FC4, detailedResult);
 }
 
-void mergeCanny(Mat canny, Mat out)
+void mergeSobel(Mat sobel, Mat out)
 {
     for (int i = 0; i < out.rows; ++i)
         for (int j = 0; j < out.cols; ++j)
         {
-            unsigned char c = canny.data[1 * canny.cols * i + 1 * j + 0];
+            unsigned char c = sobel.data[1 * sobel.cols * i + 1 * j + 0];
 
-            if (c == 0 && c == 0 && c == 0)
-                continue;
+            if (c < MERGE_SOBEL_LIMIAR) continue;
 
-
-            for (int k = -CANNY_LINE_RADIUS; k <= CANNY_LINE_RADIUS; ++k)
-                for (int l = -CANNY_LINE_RADIUS; l <= CANNY_LINE_RADIUS; ++l)
-                {
-                    int x = MIN(MAX(j + k, 0), out.cols - 1);
-                    int y = MIN(MAX(i + l, 0), out.rows - 1);
-                    out.data[3 * out.cols * y + 3 * x + 0] = 255 - c;
-                    out.data[3 * out.cols * y + 3 * x + 1] = 255 - c;
-                    out.data[3 * out.cols * y + 3 * x + 2] = 255 - c;
-                }
+            int x = j;
+            int y = i;
+            out.data[3 * out.cols * y + 3 * x + 0] = MIN(out.data[3 * out.cols * y + 3 * x + 0] + MERGE_SOBEL_LINE_INTENSITY * c, 255);
+            out.data[3 * out.cols * y + 3 * x + 1] = MIN(out.data[3 * out.cols * y + 3 * x + 1] + MERGE_SOBEL_LINE_INTENSITY * c, 255);
+            out.data[3 * out.cols * y + 3 * x + 2] = MIN(out.data[3 * out.cols * y + 3 * x + 2] + MERGE_SOBEL_LINE_INTENSITY * c, 255);
         }
 }
 
@@ -133,29 +129,40 @@ int main() {
     namedWindow("output2");
     moveWindow("output2", width,100);
     namedWindow("output3");
-    moveWindow("output2", width,300);
+    moveWindow("output3", width,300);
 
     while (true) {
-        Mat cameraFrame, filteredFrame, detailedFrame, cannyFrame, blurFrame;
+        Mat cameraFrame, filteredFrame, detailedFrame, sobelFrame, blurFrame, blurFrameGray;
         stream1.read(cameraFrame);
         filterCameraFrame(cameraFrame, &filteredFrame, &detailedFrame, image_data, filteredResult, detailedResult);
 
         floatImageToU8Image(filteredFrame, filteredResultWithCanny);
-        Mat filteredFrameWithCanny = cv::Mat(filteredFrame.rows, filteredFrame.cols, CV_8UC3, filteredResultWithCanny);
+        Mat filteredFrameWithSobel = cv::Mat(filteredFrame.rows, filteredFrame.cols, CV_8UC3, filteredResultWithCanny);
 
 #ifdef USE_GAUSSIAN_BLUR_BEFORE_CANNY
-        cv::GaussianBlur(filteredFrameWithCanny, blurFrame, cv::Size(7, 7), 2.0);
+        cv::GaussianBlur(filteredFrameWithSobel, blurFrame, cv::Size(7, 7), 2.0);
 #else
-        blurFrame = filteredFrameWithCanny;
+        blurFrame = filteredFrameWithSobel;
 #endif
 
-        cv::Canny(blurFrame, cannyFrame, CANNY_THRESHOLD1, CANNY_THRESHOLD2, 3);
-        mergeCanny(cannyFrame, filteredFrameWithCanny);
+        cvtColor(blurFrame, blurFrameGray, COLOR_BGR2GRAY);
+
+        Mat grad_x, grad_y;
+        Mat abs_grad_x, abs_grad_y;
+
+        Sobel(blurFrameGray, grad_x, CV_16S, 1, 0, SOBEL_KSIZE, SOBEL_SCALE, SOBEL_DELTA, BORDER_DEFAULT);
+        Sobel(blurFrameGray, grad_y, CV_16S, 0, 1, SOBEL_KSIZE, SOBEL_SCALE, SOBEL_DELTA, BORDER_DEFAULT);
+        // converting back to CV_8U
+        convertScaleAbs(grad_x, abs_grad_x);
+        convertScaleAbs(grad_y, abs_grad_y);
+        addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0, sobelFrame);
+
+        mergeSobel(sobelFrame, filteredFrameWithSobel);
 
         imshow("input", cameraFrame);
         imshow("output1", filteredFrame);
         imshow("output2", detailedFrame);
-        imshow("output3", filteredFrameWithCanny);
+        imshow("output3", filteredFrameWithSobel);
         if (waitKey(30) >= 0)
         break;
     }
