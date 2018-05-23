@@ -21,6 +21,7 @@ static r32* load_image(const s8* image_path,
 	s32* image_channels,
 	s32 desired_channels)
 {
+	stbi_set_flip_vertically_on_load(1);
 	u8* auxiliary_data = stbi_load(image_path, image_width, image_height, image_channels, DEFAULT_IMAGE_CHANNELS);
 
 	if (auxiliary_data == 0)
@@ -68,8 +69,11 @@ static void store_image(const s8* result_path,
 			auxiliary_data[i * image_width * image_channels + j * image_channels + 3] = 255;
 		}
 	}
+
+	stbi_flip_vertically_on_write(1);
 	
-	stbi_write_png(result_path, image_width, image_height, image_channels, auxiliary_data, image_width * image_channels);
+	//stbi_write_png(result_path, image_width, image_height, image_channels, auxiliary_data, image_width * image_channels);
+	stbi_write_bmp(result_path, image_width, image_height, image_channels, auxiliary_data);
 	dealloc_memory(auxiliary_data);
 }
 
