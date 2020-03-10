@@ -7,7 +7,6 @@
 #include "Util.h"
 #include "ParallelDomainTransform.h"
 
-#define DEFAULT_IMAGE_PATH "./res/img.jpg"
 #define DEFAULT_SPATIAL_FACTOR 0.1f
 #define DEFAULT_RANGE_FACTOR 1.0f
 #define DEFAULT_NUM_ITERATIONS 4
@@ -78,9 +77,10 @@ static void store_image(const s8* result_path,
 
 static void print_help_message(const s8* exe_name)
 {
-	print("Usage: %s\n\n", exe_name);
-	print("Optional Parameters:\n");
+	print("Usage: %s [args ...]\n\n", exe_name);
+	print("Mandatory Parameters:\n");
 	print("\tImage Path: -p <string>\n");
+	print("\nOptional Parameters:\n");
 	print("\tSpatial Factor: -s <r32>\n");
 	print("\tRange Factor: -r <r32>\n");
 	print("\tNumber of Iterations: -i <s32>\n");
@@ -94,7 +94,6 @@ static void print_help_message(const s8* exe_name)
 
 extern s32 main(s32 argc, s8** argv)
 {
-	s8 default_image_path[] = DEFAULT_IMAGE_PATH;
 	s8 default_result_path[] = DEFAULT_RESULT_PATH;
 	
 	s8* image_path = 0;
@@ -177,10 +176,14 @@ extern s32 main(s32 argc, s8** argv)
 	r32* image_bytes;
 	r32* image_result;
 
-	if (image_path)
-		image_bytes = load_image(image_path, &image_width, &image_height, &image_channels, DEFAULT_IMAGE_CHANNELS);
-	else
-		image_bytes = load_image(default_image_path, &image_width, &image_height, &image_channels, DEFAULT_IMAGE_CHANNELS);
+	if (!image_path)
+  {
+    print("The image path was not provided.\n");
+    print_help_message(argv[0]);
+    return 0;
+  }
+	
+  image_bytes = load_image(image_path, &image_width, &image_height, &image_channels, DEFAULT_IMAGE_CHANNELS);
 
 	if (!image_bytes)
 	{

@@ -15,10 +15,12 @@ The result will be available in `bin/parallel-domain-transform`.
 
 ```bash
 $ ./parallel-domain-transform -h
-Usage: ./parallel-domain-transform
+Usage: ./bin/parallel-domain-transform [args ...]
+
+Mandatory Parameters:
+	Image Path: -p <string>
 
 Optional Parameters:
-	Image Path: -p <string>
 	Spatial Factor: -s <r32>
 	Range Factor: -r <r32>
 	Number of Iterations: -i <s32>
