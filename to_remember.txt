@@ -1,2 +1,0 @@
--> Implementação original da Domain Transform primeiro realiza o filtro horizontal e depois o filtro vertical.
-	A implementação paralela está fazendo o contrário. Levar isso em consideração caso os resultados sejam comparados no futuro.

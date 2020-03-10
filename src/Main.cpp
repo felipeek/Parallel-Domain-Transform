@@ -107,7 +107,7 @@ extern s32 main(s32 argc, s8** argv)
 	s32 collect_time = DEFAULT_COLLECT_TIME;
 	s8* result_path = 0;
 	
-	if (argc % 2 != 0)
+	if (argc % 2 != 0 && argc > 1)
 	{
 		for (s32 i = 1; i < argc; i += 2)
 		{
